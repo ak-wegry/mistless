@@ -5,7 +5,6 @@
 - タグジャンプ機能による効率的なプログラム参照
 - ファイル拡張子に応じたキーワード/コメントの色分け表示
 
-## デモ
 ![](https://github.com/ak-wegry/mistless/blob/main/Images/mistless_demo.png)
 
 ## 使い方
