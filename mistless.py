@@ -1,22 +1,27 @@
-# coding: shift_jis 
+# coding: utf-8
 # =============================================================================
-# ƒvƒƒOƒ‰ƒ€EƒgƒŒ[ƒXEƒc[ƒ‹
+# ãƒ—ãƒ­ã‚°ãƒ©ãƒ ãƒ»ãƒˆãƒ¬ãƒ¼ã‚¹ãƒ»ãƒ„ãƒ¼ãƒ«
 # =============================================================================
-# [•ÏX—š—ğ]
-# Ver0.00  2021/06/05 ì¬ŠJn
-# Ver1.00  2021/10/11 V‹Kì¬
+# [å¤‰æ›´å±¥æ­´]
+# Ver0.00  2021/06/05 ä½œæˆé–‹å§‹
+# Ver1.00  2021/10/11 æ–°è¦ä½œæˆ
+# Ver1.01  2022/12/04 javaå¯¾å¿œã®è¿½åŠ 
+#                     chardetã®æ–‡å­—ã‚³ãƒ¼ãƒ‰åˆ¤å®šèª¤ã‚Š(å¯èƒ½æ€§)ã¸ã®å¯¾å‡¦
+#                     å¯¾å¿œã™ã‚‹æ‹¬å¼§ã‚’æ¢ã™å‡¦ç†ã®ä¸å…·åˆä¿®æ­£
+#                     C/Javaã§ã®ã‚¿ã‚°ä½œæˆå‡¦ç†ã®ä¸å…·åˆä¿®æ­£
+# Ver1.02  2022/12/29 Windows/Linuxã‚³ãƒ¼ãƒ‰ã®å…±é€šåŒ–
+#                     ç½«ç·šç´ ç‰‡ã®è¡¨ç¤ºã‚ºãƒ¬è£œæ­£
+# Ver1.03  2023/10/29 classå†…ã§ã®ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°å‚ç…§ã®è§£æ¶ˆ
+# Ver1.04  2023/11/26 ()ã®ç„¡ã„ã‚¯ãƒ©ã‚¹/é–¢æ•°å®šç¾©ã§ã‚¿ã‚°ä½œæˆã™ã‚‹ä¿®æ­£
+#                     0byteãƒ•ã‚¡ã‚¤ãƒ«ã§ç•°å¸¸çµ‚äº†ã™ã‚‹ä¸å…·åˆä¿®æ­£
+#                     ãƒªã‚¹ãƒˆãƒ•ã‚¡ã‚¤ãƒ«ã«ã‚ˆã‚‹èª­è¾¼ã¿æ©Ÿèƒ½ã®è¿½åŠ 
+#                     ãƒ•ã‚¡ã‚¤ãƒ«èª­è¾¼ã¿æ™‚ã®ã‚¿ã‚°æ¤œç´¢æ–‡å­—åˆ—ã‚’è¡Œç•ªå·ã¸å¤‰æ›´
+#                     æ¨™æº–å…¥åŠ›ã‹ã‚‰ã®èª­è¾¼ã¿æ©Ÿèƒ½è¿½åŠ 
+# Ver1.05  2023/12/03 ESCã‚’å«ã‚€è¡Œã®è¡¨ç¤ºä¸å…·åˆã‚’ä¿®æ­£
+#                     syntaxå¼·èª¿ãƒ‘ã‚¿ãƒ¼ãƒ³åˆ‡æ›¿ãˆæ©Ÿèƒ½è¿½åŠ 
+#                     å¼•æ•°ã§æŒ‡å®šã—ãŸå…¨ãƒ•ã‚¡ã‚¤ãƒ«åˆ†ã®ã‚¿ã‚°ä½œæˆã™ã‚‹æ©Ÿèƒ½è¿½åŠ 
 
-usage = """
-ƒvƒƒOƒ‰ƒ€EƒgƒŒ[ƒXEƒc[ƒ‹  [Ver1.00  2021/10/11]
-
-mistless.py [option] filename ...
-   [option]
-    -m filename : ƒ^ƒOƒtƒ@ƒCƒ‹‚Ìì¬
-    -t filename : ƒ^ƒOƒtƒ@ƒCƒ‹‚Ìw’è(w’è‚È‚µ:tags)
-    -x n        : ƒ^ƒuƒXƒgƒbƒv‚Ìw’è(w’è‚È‚µ:4)
-"""
-
-# import
+#import
 import os
 import sys
 import chardet
@@ -26,86 +31,130 @@ import shutil
 import math
 import unicodedata
 from pathlib import Path
-from msvcrt import getch
-from tkinter import messagebox
-## ESCƒV[ƒPƒ“ƒX—LŒø‰»—p
-from ctypes import windll, wintypes, byref
-from functools import reduce
 
-# ŒÅ’è’l
-MAX_HISTORY = 20	# ƒRƒ}ƒ“ƒh—š—ğ‚ÌÅ‘å”
+if os.name == "nt":
+	from msvcrt import getch
+	## ESCã‚·ãƒ¼ã‚±ãƒ³ã‚¹æœ‰åŠ¹åŒ–ç”¨
+	from ctypes import windll, wintypes, byref
+elif os.name == "posix":
+	import termios
 
-SCROLL_PAGE = 2	# ŒŸõ‚ÅƒXƒNƒ[ƒ‹ˆÚ“®‚·‚é‘OŒã‚Ìƒy[ƒW”(‚»‚êˆÈã‚ÍƒWƒƒƒ“ƒv)
+usage = """
+ãƒ—ãƒ­ã‚°ãƒ©ãƒ ãƒ»ãƒˆãƒ¬ãƒ¼ã‚¹ãƒ»ãƒ„ãƒ¼ãƒ«  [Ver1.05  2023/12/3]
 
-MODE_WORD = 0	# ƒ[ƒh’PˆÊ‚ÌˆÚ“®
-MODE_CHAE = 1	# •¶š’PˆÊ‚ÌˆÚ“®
+mistless.py [option] filename ...
+   [option]
+    -m filename : ã‚¿ã‚°ãƒ•ã‚¡ã‚¤ãƒ«ã®ä½œæˆ
+    -t filename : ã‚¿ã‚°ãƒ•ã‚¡ã‚¤ãƒ«ã®æŒ‡å®š(æŒ‡å®šãªã—:tags)
+    -l filename : å…¥åŠ›ãƒ•ã‚¡ã‚¤ãƒ«ã®ãƒªã‚¹ãƒˆãƒ•ã‚¡ã‚¤ãƒ«æŒ‡å®š
+    -x n        : ã‚¿ãƒ–ã‚¹ãƒˆãƒƒãƒ—ã®æŒ‡å®š(æŒ‡å®šãªã—:4)
+"""
 
-DIR_FORWARD = 1	# ‡•ûŒü
-DIR_REVERSE = 2	# ‹t•ûŒü
+## å›ºå®šå€¤
+MAX_HISTORY = 20	# ã‚³ãƒãƒ³ãƒ‰å±¥æ­´ã®æœ€å¤§æ•°
+USABLE_CODE = (
+	"ascii", "SHIFT_JIS","utf-8","UTF-8-SIG", "UTF-16","EUC-JP","ISO-8859-1"
+	)	# æ‰±ãˆã‚‹æ–‡å­—ã‚³ãƒ¼ãƒ‰
 
-MORE_CHAR = "$"     # ƒ}ƒ‹ƒ`ƒoƒCƒg•¶š‚ª“r’†‚Å“rØ‚ê‚éÛ‚Ì•\¦•¶š
-TAG_FILE = "tags"   # default‚Ìƒ^ƒOƒtƒ@ƒCƒ‹–¼
+SCROLL_PAGE = 2	# æ¤œç´¢ã§ã‚¹ã‚¯ãƒ­ãƒ¼ãƒ«ç§»å‹•ã™ã‚‹å‰å¾Œã®ãƒšãƒ¼ã‚¸æ•°(ãã‚Œä»¥ä¸Šã¯ã‚¸ãƒ£ãƒ³ãƒ—)
 
-ESC_PTN       = "\x1b\[[0-9;]*m"	# ESCƒV[ƒPƒ“ƒX‚Ìƒpƒ^[ƒ“
-ESC_INIT      = "\x1b[m"	# F‚Ì‰Šú‰»
-ESC_REVERSE   = "\x1b[7m"	# ”½“]
-ESC_UNDERLINE = "\x1b[4m"	# ‰ºü
-ESC_BLACK     = "\x1b[30m"	# ƒtƒHƒ“ƒg:•
-ESC_RED       = "\x1b[31m"	# ƒtƒHƒ“ƒg:Ô
-ESC_GREEN     = "\x1b[32m"	# ƒtƒHƒ“ƒg:—Î
-ESC_YELLOW    = "\x1b[33m"	# ƒtƒHƒ“ƒg:‰©F
-ESC_BLUE      = "\x1b[34m"	# ƒtƒHƒ“ƒg:Â
-ESC_PURPLE    = "\x1b[35m"	# ƒtƒHƒ“ƒg:‡
-ESC_CYAN      = "\x1b[36m"	# ƒtƒHƒ“ƒg:ƒVƒAƒ“
-ESC_WHITE     = "\x1b[37m"	# ƒtƒHƒ“ƒg:”’
-ESC_BG_BLACK  = "\x1b[40m"	# ”wŒiF:•
-ESC_BG_RED    = "\x1b[41m"	# ”wŒiF:Ô
-ESC_BG_GREEN  = "\x1b[42m"	# ”wŒiF:—Î
-ESC_BG_YELLOW = "\x1b[43m"	# ”wŒiF:‰©F
-ESC_BG_BLUE   = "\x1b[44m"	# ”wŒiF:Â
-ESC_BG_PURPLE = "\x1b[45m"	# ”wŒiF:‡
-ESC_BG_CYAN   = "\x1b[46m"	# ”wŒiF:ƒVƒAƒ“
-ESC_BG_WHITE  = "\x1b[47m"	# ”wŒiF:”’
+MODE_WORD = 0	# ãƒ¯ãƒ¼ãƒ‰å˜ä½ã®ç§»å‹•
+MODE_CHAR = 1	# æ–‡å­—å˜ä½ã®ç§»å‹•
+
+DIR_FORWARD = 1	# é †æ–¹å‘
+DIR_REVERSE = 2	# é€†æ–¹å‘
+
+MORE_CHAR = "$"     # ãƒãƒ«ãƒãƒã‚¤ãƒˆæ–‡å­—ãŒé€”ä¸­ã§é€”åˆ‡ã‚Œã‚‹éš›ã®è¡¨ç¤ºæ–‡å­—
+TAG_FILE = "tags"   # defaultã®ã‚¿ã‚°ãƒ•ã‚¡ã‚¤ãƒ«å
+
+ESC_PTN       = "\x1b\[[0-9;]*m"	# ESCã‚·ãƒ¼ã‚±ãƒ³ã‚¹ã®ãƒ‘ã‚¿ãƒ¼ãƒ³
+ESC_INIT      = "\x1b[m"	# è‰²ã®åˆæœŸåŒ–
+ESC_REVERSE   = "\x1b[7m"	# åè»¢
+ESC_UNDERLINE = "\x1b[4m"	# ä¸‹ç·š
+ESC_BLACK     = "\x1b[30m"	# ãƒ•ã‚©ãƒ³ãƒˆ:é»’
+ESC_RED       = "\x1b[31m"	# ãƒ•ã‚©ãƒ³ãƒˆ:èµ¤
+ESC_GREEN     = "\x1b[32m"	# ãƒ•ã‚©ãƒ³ãƒˆ:ç·‘
+ESC_YELLOW    = "\x1b[33m"	# ãƒ•ã‚©ãƒ³ãƒˆ:é»„è‰²
+ESC_BLUE      = "\x1b[34m"	# ãƒ•ã‚©ãƒ³ãƒˆ:é’
+ESC_PURPLE    = "\x1b[35m"	# ãƒ•ã‚©ãƒ³ãƒˆ:ç´«
+ESC_CYAN      = "\x1b[36m"	# ãƒ•ã‚©ãƒ³ãƒˆ:ã‚·ã‚¢ãƒ³
+ESC_WHITE     = "\x1b[37m"	# ãƒ•ã‚©ãƒ³ãƒˆ:ç™½
+ESC_BG_BLACK  = "\x1b[40m"	# èƒŒæ™¯è‰²:é»’
+ESC_BG_RED    = "\x1b[41m"	# èƒŒæ™¯è‰²:èµ¤
+ESC_BG_GREEN  = "\x1b[42m"	# èƒŒæ™¯è‰²:ç·‘
+ESC_BG_YELLOW = "\x1b[43m"	# èƒŒæ™¯è‰²:é»„è‰²
+ESC_BG_BLUE   = "\x1b[44m"	# èƒŒæ™¯è‰²:é’
+ESC_BG_PURPLE = "\x1b[45m"	# èƒŒæ™¯è‰²:ç´«
+ESC_BG_CYAN   = "\x1b[46m"	# èƒŒæ™¯è‰²:ã‚·ã‚¢ãƒ³
+ESC_BG_WHITE  = "\x1b[47m"	# èƒŒæ™¯è‰²:ç™½
 
 syntax_list = ()
-syntax_list_py = ("break", "continue", "del", "except", "exec", "finally", "pass", "print", "raise", "return", "try", "with", "global", "assert", "lambda", "yield", "def", "class", "for", "while", "if", "elif", "else", "and", "in", "is", "not", "or", "import", "from", "as")	# python‚Ìkeyword
-syntax_list_c = ("void", "char", "short", "int", "long", "float", "double", "auto", "static", "const", "signed", "unsigned", "extern", "volatile", "register", "return", "goto", "if", "else", "switch", "case", "default", "break", "for", "while", "do", "continue", "typedef", "struct", "enum", "union", "sizeof") # CŒ¾Œê
+syntax_list_py = ("break", "continue", "del", "except", "exec", "finally", "pass", "print", "raise", "return", "try", "with", "global", "assert", "lambda", "yield", "def", "class", "for", "while", "if", "elif", "else", "and", "in", "is", "not", "or", "import", "from", "as")	# pythonã®keyword
+syntax_list_c = ("void", "char", "short", "int", "long", "float", "double", "auto", "static", "const", "signed", "unsigned", "extern", "volatile", "register", "return", "goto", "if", "else", "switch", "case", "default", "break", "for", "while", "do", "continue", "typedef", "struct", "enum", "union", "sizeof") # Cè¨€èª
 syntax_list_cpp = ("new", "delete", "this", "friend", "using", "public", "protected", "private", "inline", "virtual", "explicit", "export", "bool", "wchar_t", "throw", "try", "catch", "operator", "typeid", "and", "bitor", "or", "xor", "compl", "bitand", "and_eq", "or_eq", "xor_eq", "not", "not_eq", "const", "static", "dynamic", "reinterpret", "mutable", "class", "true", "false") + syntax_list_c # C++
-syntax_list_awk = ("BEGIN", "END", "if", "else", "while", "for", "do", "contained", "TODO", "break", "continue", "delete", "exit", "function", "getline", "next", "print", "printf", "return", "nextfile", "atan2", "close", "cos", "exp", "fflush", "int", "log", "rand", "sin", "sqrt", "srand", "gsub", "index", "length", "match", "split", "sprintf", "sub", "substr", "system", "asort", "gensub", "mktime", "strftime", "strtonum", "systime", "tolower", "toupper", "and", "or", "xor", "compl", "lshift", "rshift", "dcgettext", "bindtextdomain", "ARGC", "ARGV", "FILENAME", "FNR", "FS", "NF", "NR", "OFMT", "OFS", "ORS", "RLENGTH", "RS", "RSTART", "SUBSEP", "ARGIND", "BINMODE", "CONVFMT", "ENVIRON", "ERRNO", "FIELDWIDTHS", "IGNORECASE", "LINT", "PROCINFO", "RT", "RLENGTH", "TEXTDOMAIN") # awk
-syntax_dic = {".py":syntax_list_py, ".c":syntax_list_c, ".cpp": syntax_list_cpp, ".h":syntax_list_cpp, ".awk":syntax_list_awk }
+syntax_list_awk = ("BEGIN", "END", "if", "else", "while", "for", "do", "switch", "case", "contained", "TODO", "break", "continue", "delete", "exit", "function", "getline", "next", "print", "printf", "return", "nextfile", "atan2", "close", "cos", "exp", "fflush", "int", "log", "rand", "sin", "sqrt", "srand", "gsub", "index", "length", "match", "split", "sprintf", "sub", "substr", "system", "asort", "gensub", "mktime", "strftime", "strtonum", "systime", "tolower", "toupper", "and", "or", "xor", "compl", "lshift", "rshift", "dcgettext", "bindtextdomain", "ARGC", "ARGV", "FILENAME", "FNR", "FS", "NF", "NR", "OFMT", "OFS", "ORS", "RLENGTH", "RS", "RSTART", "SUBSEP", "ARGIND", "BINMODE", "CONVFMT", "ENVIRON", "ERRNO", "FIELDWIDTHS", "IGNORECASE", "LINT", "PROCINFO", "RT", "RLENGTH", "TEXTDOMAIN") # awk
+syntax_list_java = ("native", "package", "import", "goto", "const", "if", "else", "switch", "while", "for", "do", "true", "false", "null", "this", "super", "new", "instanceof", "boolean", "char", "byte", "short", "int", "long", "float", "double", "void", "return", "static", "synchronized", "transient", "volatile", "final", "strictfp", "serializable", "throw", "try", "catch", "finally", "assert", "synchronized", "throws", "extends", "implements", "interface", "class", "enum", "break", "continue", "nextgroup", "public", "protected", "private", "abstract") # java
+syntax_dic = {
+	".py": syntax_list_py,
+	".c": syntax_list_c,
+	".cpp": syntax_list_cpp,
+	".h": syntax_list_cpp,
+	".awk": syntax_list_awk,
+	".java":syntax_list_java
+	}
 
 multi_line_ptn = []
 multi_line_ptn_py  = ["\"\"\"", "\"\"\"", "\"\"\"", ESC_CYAN]
 multi_line_ptn_c   = ["/\*|\*/", "/*", "*/", ESC_BLUE]
 multi_line_ptn_cpp = ["(?<!/)/\*|\*/", "/*", "*/", ESC_BLUE]
-multi_line_dic ={".py": multi_line_ptn_py, ".c": multi_line_ptn_c, ".cpp":multi_line_ptn_cpp, ".h":multi_line_ptn_cpp}
+multi_line_ptn_java= ["(?<!/)/\*|\*/", "/*", "*/", ESC_BLUE]
+multi_line_dic ={
+	".py": multi_line_ptn_py,
+	".c": multi_line_ptn_c,
+	".cpp": multi_line_ptn_cpp,
+	".h": multi_line_ptn_cpp,
+	".java": multi_line_ptn_java
+	}
 
 comment_ptn = ""
-comment_ptn_py = "#.*"
-comment_ptn_c = "/\*.*?\*/|([^/]|/[^*])*?(\*/)|/\*.*(?<!\*/)$"
+comment_ptn_py  = "#.*"
+comment_ptn_c   = "/\*.*?\*/|([^/]|/[^*])*?(\*/)|/\*.*(?<!\*/)$"
 comment_ptn_cpp = "/\*.*?\*/|([^/]|/[^*])*?(\*/)|/\*.*(?<!\*/)$|//.*"
+comment_ptn_java= "/\*.*?\*/|([^/]|/[^*])*?(\*/)|/\*.*(?<!\*/)$|//.*"
 comment_ptn_awk = "#.*"
-comment_dic = {".py": comment_ptn_py, ".c": comment_ptn_c, ".cpp": comment_ptn_cpp, ".h":comment_ptn_cpp, ".awk":comment_ptn_awk}
+comment_dic = {
+	".py": comment_ptn_py,
+	".c": comment_ptn_c,
+	".cpp": comment_ptn_cpp,
+	".h": comment_ptn_cpp,
+	".awk": comment_ptn_awk,
+	".java": comment_ptn_java
+	}
 
 quote_ptn = ""
 quote_ptn_std = "\"(.*?)(?<!\\\\)\"|\'(.*?)(?<!\\\\)\'"
 quote_ptn_py = "\"\"\"|" + quote_ptn_std 
-quote_dic = {".py": quote_ptn_py, ".c": quote_ptn_std, ".cpp": quote_ptn_std, ".h":quote_ptn_std, ".awk": quote_ptn_std}
-
+quote_dic = {
+	".py": quote_ptn_py,
+	".c": quote_ptn_std,
+	".cpp": quote_ptn_std,
+	".h": quote_ptn_std,
+	".awk": quote_ptn_std,
+	".java": quote_ptn_std
+	}
 
 #=== define class ===============================================================
 class ParamInfo():
 	"""
-	ˆø”‚ÉŠÖ‚·‚éî•ñ
+	å¼•æ•°ã«é–¢ã™ã‚‹æƒ…å ±
 
 	Attributes:
-		read_files[]  : “ü—Íƒtƒ@ƒCƒ‹–¼
-		read_tag_file : “ü—Íƒ^ƒOƒtƒ@ƒCƒ‹–¼
-		make_tag_file : o—Íƒ^ƒOƒtƒ@ƒCƒ‹–¼
-		tab_stop      : ƒ^ƒuƒXƒgƒbƒv”
-		err_msg       : ‰ğÍ‚ÌƒGƒ‰[ƒƒbƒZ[ƒW
+		read_files[]  : å…¥åŠ›ãƒ•ã‚¡ã‚¤ãƒ«å
+		read_tag_file : å…¥åŠ›ã‚¿ã‚°ãƒ•ã‚¡ã‚¤ãƒ«å
+		make_tag_file : å‡ºåŠ›ã‚¿ã‚°ãƒ•ã‚¡ã‚¤ãƒ«å
+		tab_stop      : ã‚¿ãƒ–ã‚¹ãƒˆãƒƒãƒ—æ•°
+		err_msg       : è§£ææ™‚ã®ã‚¨ãƒ©ãƒ¼ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸
 	"""
-
 
 	def __init__(self):
 		self.read_files = []
@@ -114,26 +163,27 @@ class ParamInfo():
 		self.tab_stop = 4
 		self.err_msg = ""
 
-
 	def analyze(self, argv):
 		"""
-		ˆø”‚Ì‰ğÍ
+		å¼•æ•°ã®è§£æ
 		Args:
-			argv (list): ˆø”
-
+			argv (list): å¼•æ•°
 		Returns:
-			boolean: True ƒ`ƒFƒbƒNOK, False ƒ`ƒFƒbƒNNG
+			boolean: True ãƒã‚§ãƒƒã‚¯OK, False ãƒã‚§ãƒƒã‚¯NG
 		"""
+		file_msg = "%sãƒ•ã‚¡ã‚¤ãƒ«(%s)ãŒå­˜åœ¨ã—ã¾ã›ã‚“ã€‚"
 		opt_id = ""
 		for arg in argv[1:]:
 			if opt_id == "":
-				if re.match(r"^-[mtx]$", arg) is not None:
+				if re.match(r"^-[mtlx]$", arg) is not None:
 					opt_id = arg
 				elif arg[0] == "-":
-					self.err_msg = f"•s–¾‚ÈƒIƒvƒVƒ‡ƒ“({arg})‚Å‚·B"
+					self.err_msg = f"ä¸æ˜ãªã‚ªãƒ—ã‚·ãƒ§ãƒ³({arg})ã§ã™ã€‚"
 					break
 				else:
-					if re.search(r"[*?]", arg) != None:
+					# èª­è¾¼ã¿ãƒ•ã‚¡ã‚¤ãƒ«åã®è¨­å®š
+					if re.search(r"[*?]", arg) is not None:
+						# windowsã§ã®ãƒ¯ã‚¤ãƒ«ãƒ‰ã‚«ãƒ¼ãƒ‰æŒ‡å®šå¯¾å¿œ
 						path = os.path.dirname(arg)
 						file = os.path.basename(arg)
 						for pathfile in Path(path).glob(file):
@@ -141,48 +191,83 @@ class ParamInfo():
 							if pathfile not in self.read_files:
 								self.read_files.append(pathfile)
 					else:
-						if Path(arg).exists() == True:
+						if Path(arg).exists() is True:
 							if arg not in self.read_files:
 								self.read_files.append(arg)
 						else:
-							self.err_msg = f"ƒtƒ@ƒCƒ‹({arg})‚ª‘¶İ‚µ‚Ü‚¹‚ñB"
+							self.err_msg = file_msg % ("", arg)
 							break
 			else:
 				if opt_id == "-m":
+					# ä½œæˆã™ã‚‹ã‚¿ã‚°ãƒ•ã‚¡ã‚¤ãƒ«åã®è¨­å®š
 					self.make_tag_file = arg
 					opt_id = ""
 				elif opt_id == "-t":
-					if Path(arg).exists() == True:
+					# èª­è¾¼ã‚€ã‚¿ã‚°ãƒ•ã‚¡ã‚¤ãƒ«åã®è¨­å®š
+					if Path(arg).exists() is True:
 						self.read_tag_file = arg
 					else:
-						self.err_msg = f"ƒ^ƒOƒtƒ@ƒCƒ‹({arg})‚ª‘¶İ‚µ‚Ü‚¹‚ñB"
+						self.err_msg = file_msg % ("ã‚¿ã‚°", arg)
+						break
+					opt_id = ""
+				elif opt_id == "-l":
+					# ãƒªã‚¹ãƒˆãƒ•ã‚¡ã‚¤ãƒ«ã«ã‚ˆã‚‹èª­è¾¼ã¿ãƒ•ã‚¡ã‚¤ãƒ«åã®è¨­å®š
+					if Path(arg).exists() is True:
+						text = self.get_line(arg)
+						for line in text:
+							if Path(line).exists() is True:
+								if line not in self.read_files:
+									self.read_files.append(line)
+							else:
+								self.err_msg = file_msg % ("", line)
+								break
+					else:
+						self.err_msg = file_msg % ("ãƒªã‚¹ãƒˆ", arg)
 						break
 					opt_id = ""
 				elif opt_id == "-x":
+					# ã‚¿ãƒ–ã‚¹ãƒˆãƒƒãƒ—ã®è¨­å®š
 					self.tab_stop = int(arg)
 					opt_id = ""
 
 		return (self.err_msg == "")
 
+	def get_line(self, file):
+		"""
+		ãƒ•ã‚¡ã‚¤ãƒ«å†…ã®è¡Œãƒ‡ãƒ¼ã‚¿å–å¾—
+		Args:
+			file (str): ãƒ•ã‚¡ã‚¤ãƒ«å
+		Returns:
+			list: èª­è¾¼ã‚“ã è¡Œãƒ‡ãƒ¼ã‚¿
+		"""
+		with open(file, "rb") as f:
+			data = f.read()
+
+		guess = chardet.detect(data).get("encoding")
+		if guess not in USABLE_CODE:
+			guess = locale.getpreferredencoding()
+
+		return data.decode(guess).splitlines()
+
 
 class Escape():
 	"""
-	ESCƒR[ƒh‚Ìİ’è‚ÉŠÖ‚·‚éˆ—
+	ESCã‚³ãƒ¼ãƒ‰ã®è¨­å®šã«é–¢ã™ã‚‹å‡¦ç†
 
 	Attributes:
-		only_text : ESCƒR[ƒh‚ğœŠO‚µ‚½•¶š—ñ
-		esc_list  : 1•¶š–ˆ‚É‘Î‰‚µ‚½ESCƒR[ƒh
+		only_text : ESCã‚³ãƒ¼ãƒ‰ã‚’é™¤å¤–ã—ãŸæ–‡å­—åˆ—
+		esc_list  : 1æ–‡å­—æ¯ã«å¯¾å¿œã—ãŸESCã‚³ãƒ¼ãƒ‰
 	"""
 
 	def __init__(self):
-		self.only_text= ""	# ESCƒR[ƒh‚ğœŠO‚µ‚½•¶š—ñ
-		self.esc_list = []	# 1•¶š–ˆ‚É‘Î‰‚µ‚½ESCƒR[ƒh
+		self.only_text= ""	# ESCã‚³ãƒ¼ãƒ‰ã‚’é™¤å¤–ã—ãŸæ–‡å­—åˆ—
+		self.esc_list = []	# 1æ–‡å­—æ¯ã«å¯¾å¿œã—ãŸESCã‚³ãƒ¼ãƒ‰
 
 	def analyze_text(self, esc_text):
-		# ESCœŠO‚µ‚½•¶š—ñA[ˆÊ’u, ESCƒR[ƒh]ƒŠƒXƒg‚ğì¬
+		# ESCé™¤å¤–ã—ãŸæ–‡å­—åˆ—ã€[ä½ç½®, ESCã‚³ãƒ¼ãƒ‰]ãƒªã‚¹ãƒˆã‚’ä½œæˆ
 		pre_end = 0
-		esc_info = []		# [ˆÊ’u, ESCƒR[ƒh]
-		self.only_text = ""	# ESCƒR[ƒh‚ğœŠO‚µ‚½•¶š—ñ
+		esc_info = []		# [ä½ç½®, ESCã‚³ãƒ¼ãƒ‰]
+		self.only_text = ""	# ESCã‚³ãƒ¼ãƒ‰ã‚’é™¤å¤–ã—ãŸæ–‡å­—åˆ—
 		iter = re.finditer(ESC_PTN, esc_text)
 		for n in iter:
 			start = n.span()[0]
@@ -195,7 +280,7 @@ class Escape():
 		if pre_end < len(esc_text):
 			self.only_text += esc_text[pre_end:len(esc_text)]
 
-		# 1•¶š–ˆ‚É‘Î‰‚µ‚½ESCƒŠƒXƒg‚ğì¬
+		# 1æ–‡å­—æ¯ã«å¯¾å¿œã—ãŸESCãƒªã‚¹ãƒˆã‚’ä½œæˆ
 		start = 0
 		esc_num = ""
 		self.esc_list = [""] * len(self.only_text)
@@ -214,9 +299,8 @@ class Escape():
 			for i in range(start, len(self.only_text)):
 				self.esc_list[i] = esc_num
 
-
 	def coating_word(self, srch_text, esc_code):
-		# ESCœŠO‚µ‚½•¶š—ñ“à‚Ì•¶š—ñ‚ğŒŸõ‚µAESCƒŠƒXƒg‚ÉESCƒR[ƒhİ’è
+		# ESCé™¤å¤–ã—ãŸæ–‡å­—åˆ—å†…ã®æ–‡å­—åˆ—ã‚’æ¤œç´¢ã—ã€ESCãƒªã‚¹ãƒˆã«ESCã‚³ãƒ¼ãƒ‰è¨­å®š
 		iter = re.finditer(srch_text, self.only_text)
 		for n in iter:
 			start = n.span()[0]
@@ -224,15 +308,13 @@ class Escape():
 			for i in range(start, end):
 				self.esc_list[i] = re.sub(r"\x1b\[|m", "", esc_code)
 
-
 	def coating_pos(self, start, end, esc_code):
-		# “Á’èˆÊ’u‚ÌESCƒŠƒXƒg‚ÉESCƒR[ƒhİ’è
+		# ç‰¹å®šä½ç½®ã®ESCãƒªã‚¹ãƒˆã«ESCã‚³ãƒ¼ãƒ‰è¨­å®š
 		for i in range(start, end):
 			self.esc_list[i] = re.sub(r"\x1b\[|m", "", esc_code)
 
-
 	def get_esc_text(self):
-		# ESCƒŠƒXƒg‚©‚çESCƒR[ƒh‚ğ–„‚ß‚ñ‚¾•¶š—ñ‚ğì¬
+		# ESCãƒªã‚¹ãƒˆã‹ã‚‰ESCã‚³ãƒ¼ãƒ‰ã‚’åŸ‹ã‚è¾¼ã‚“ã æ–‡å­—åˆ—ã‚’ä½œæˆ
 		pre_idx = 0
 		pre_num = ""
 		esc_text = ""
@@ -240,7 +322,7 @@ class Escape():
 			if pre_num != esc_num:
 				esc_text += self.only_text[pre_idx:i]
 				if pre_num in list("0123456789"):
-					# 1‚Â‘O‚ª”½“]/‹­’²“™‚Ìê‡‚ÍAI—¹ƒR[ƒh‚ğ“ü‚ê‚é
+					# 1ã¤å‰ãŒåè»¢/å¼·èª¿ç­‰ã®å ´åˆã¯ã€çµ‚äº†ã‚³ãƒ¼ãƒ‰ã‚’å…¥ã‚Œã‚‹
 					esc_text += ESC_INIT 
 				esc_text += f"\x1b[{esc_num}m"
 				pre_idx = i
@@ -257,17 +339,15 @@ class Escape():
 
 class KeyCtrl():
 	"""
-	ƒL[•ÏŠ·‚ÉŠÖ‚·‚éî•ñ
+	ã‚­ãƒ¼å¤‰æ›ã«é–¢ã™ã‚‹æƒ…å ±
 	Attributes:
-		map[] : ƒL[•ÏŠ·î•ñ([[“ü—ÍƒL[, •ÏŠ·ƒL[]])
-		store : ’~Ï•¶š—ñ(•ÏŠ·‚µ‚½æ“¾“r’†‚ÌƒL[)
+		map[] : ã‚­ãƒ¼å¤‰æ›æƒ…å ±([[å…¥åŠ›ã‚­ãƒ¼, å¤‰æ›ã‚­ãƒ¼]])
+		store : è“„ç©æ–‡å­—åˆ—(å¤‰æ›ã—ãŸå–å¾—é€”ä¸­ã®ã‚­ãƒ¼)
 	"""
-
 
 	def __init__(self):
 		self.map = []
 		self.store = ""
-
 
 	def reg_map(self, cmd):
 		arg = re.split(r"[ \t]", cmd)
@@ -275,7 +355,6 @@ class KeyCtrl():
 			in_key  = self.cvt_ctrl(arg[1])
 			cvt_key = self.cvt_ctrl(arg[2])
 			self.map.append([in_key, cvt_key])
-
 
 	def str_to_bin(self, text, base):
 		total_bin = 0
@@ -294,7 +373,6 @@ class KeyCtrl():
 
 		return total_bin
 
-
 	def cvt_ctrl(self, text):
 		pass
 		cvt_txt = ""
@@ -308,7 +386,7 @@ class KeyCtrl():
 			if ctrl_txt[0:2] == "\\x":
 				ctrl_bin = self.str_to_bin(ctrl_txt[2:], 16)
 				ctrl_txt = chr(ctrl_bin)
-			elif re.match("\\[0-7]", ctrl_txt) != None:
+			elif re.match("\\[0-7]", ctrl_txt) is not None:
 				ctrl_bin = self.str_to_bin(ctrl_txt[1:], 8)
 				ctrl_txt = chr(ctrl_bin)
 			else:
@@ -326,25 +404,23 @@ class KeyCtrl():
 
 		return cvt_txt
 
-
 	def read_env(self):
 		file = os.getenv("MISTLESS_INIT")
-		if file == None:
+		if file is None:
 			return
 
 		if Path(file).exists():
-			# mapƒtƒ@ƒCƒ‹“Ç‚İ
+			# mapãƒ•ã‚¡ã‚¤ãƒ«èª­è¾¼ã¿
 			with open(file, "rb") as f:
 				txt = f.read()
 			guess = chardet.detect(txt).get("encoding")
-			if guess is None:
+			if guess not in USABLE_CODE:
 				guess = locale.getpreferredencoding()
 			data = txt.decode(guess).splitlines()
 
-			# mapî•ñ“o˜^
+			# mapæƒ…å ±ç™»éŒ²
 			for txt in data:
 				self.reg_map(txt)
-
 
 	def getkey(self):
 		if self.store != "":
@@ -356,14 +432,13 @@ class KeyCtrl():
 
 		return ret_key
 
-
 	def convert_key(self, in_key):
-		# ’~Ï•¶š‚ª‚ ‚éê‡A•ÏŠ·‚µ‚È‚¢
+		# è“„ç©æ–‡å­—ãŒã‚ã‚‹å ´åˆã€å¤‰æ›ã—ãªã„
 		if self.store != "":
 			return in_key
 
 		end_flag = False
-		while end_flag == False:
+		while end_flag is False:
 			more_flag = False
 			self.store = self.store + in_key
 			for cvt_data in self.map:
@@ -379,13 +454,11 @@ class KeyCtrl():
 							more_flag = True
 							break
 
-			if more_flag == False:
+			if more_flag is False:
 				end_flag = True
 
-			if end_flag == False:
+			if end_flag is False:
 				in_key = chr(ord(getch()))
-				#if in_key == "\x1b":
-				#	return "\x1b"
 
 		ret_key = self.store[0]
 		self.store = self.store[1:]
@@ -394,26 +467,28 @@ class KeyCtrl():
 
 class DispCtrl():
 	"""
-	•\¦‚ÉŠÖ‚·‚éî•ñ
+	è¡¨ç¤ºã«é–¢ã™ã‚‹æƒ…å ±
 
 	Attributes:
-		term_width : ‰æ–Ê•”
-		term_lines : ‰æ–Ês”
-		vscroll    : cƒXƒNƒ[ƒ‹”
-		hscroll    : ‰¡ƒXƒNƒ[ƒ‹”
-		tab_stop   : ƒ^ƒuƒXƒgƒbƒv”
-		move_mode  : ƒJ[ƒ\ƒ‹‚ÌˆÚ“®ƒ‚[ƒh
-		read_files : “ü—Íƒtƒ@ƒCƒ‹‚ÌƒŠƒXƒg
-		file_ctrl  : “ü—Íƒtƒ@ƒCƒ‹‚É‘Î‰‚·‚éFileCtrlƒŠƒXƒg
-		read_index : •\¦‚·‚é“ü—Íƒtƒ@ƒCƒ‹‚ÌƒŠƒXƒg“àˆÊ’u
-		read_count : “ü—Íƒtƒ@ƒCƒ‹”
-		tag_file   : ƒ^ƒOƒWƒƒƒ“ƒv‚µ‚½‚É’Ç‰Á‚·‚éFileCtrlƒŠƒXƒg
-		srch_str   : ŒŸõ‚Ì•¶š—ñ
-		srch_dir   : ŒŸõ‚Ì•ûŒü
+		term_width : ç”»é¢å¹…æ•°
+		term_lines : ç”»é¢è¡Œæ•°
+		vscroll    : ç¸¦ã‚¹ã‚¯ãƒ­ãƒ¼ãƒ«æ•°
+		hscroll    : æ¨ªã‚¹ã‚¯ãƒ­ãƒ¼ãƒ«æ•°
+		tab_stop   : ã‚¿ãƒ–ã‚¹ãƒˆãƒƒãƒ—æ•°
+		move_mode  : ã‚«ãƒ¼ã‚½ãƒ«ã®ç§»å‹•ãƒ¢ãƒ¼ãƒ‰
+		read_files : å…¥åŠ›ãƒ•ã‚¡ã‚¤ãƒ«ã®ãƒªã‚¹ãƒˆ
+		file_ctrl  : å…¥åŠ›ãƒ•ã‚¡ã‚¤ãƒ«ã«å¯¾å¿œã™ã‚‹FileCtrlãƒªã‚¹ãƒˆ
+		read_index : è¡¨ç¤ºã™ã‚‹å…¥åŠ›ãƒ•ã‚¡ã‚¤ãƒ«ã®ãƒªã‚¹ãƒˆå†…ä½ç½®
+		read_count : å…¥åŠ›ãƒ•ã‚¡ã‚¤ãƒ«æ•°
+		tag_file   : ã‚¿ã‚°ã‚¸ãƒ£ãƒ³ãƒ—ã—ãŸæ™‚ã«è¿½åŠ ã™ã‚‹FileCtrlãƒªã‚¹ãƒˆ
+		srch_str   : æ¤œç´¢ã®æ–‡å­—åˆ—
+		srch_dir   : æ¤œç´¢ã®æ–¹å‘
+		history    : HistoryCtrlã‚¯ãƒ©ã‚¹å‚ç…§ç”¨
+		keyctrl    : KeyCtrlã‚¯ãƒ©ã‚¹å‚ç…§ç”¨
+		taginfo    : TagInfoã‚¯ãƒ©ã‚¹å‚ç…§ç”¨
 	"""
 
-
-	def __init__(self):
+	def __init__(self, history, keyctrl, taginfo):
 		self.term_width = 80
 		self.term_lines = 25
 		self.vscroll = 24
@@ -427,9 +502,11 @@ class DispCtrl():
 		self.tag_file = []
 		self.srch_str = ""
 		self.srch_dir = DIR_FORWARD
+		self.history = history
+		self.keyctrl = keyctrl
+		self.taginfo = taginfo
 
 		self.get_term()
-
 
 	def get_term(self):
 		terminal_size = shutil.get_terminal_size()
@@ -438,29 +515,31 @@ class DispCtrl():
 		self.vscroll = self.term_lines - 1
 		self.hscroll = int(self.term_width / 2) 
 
-
 	def set_read_file(self, files):
 		self.read_files = files
 		self.read_count = len(files)
 		if self.read_count > 0:
 			self.read_index = 1
 		for i in range(0, self.read_count):
-			new_ctrl = FileCtrl()
+			new_ctrl = FileCtrl(self)
 			self.file_ctrl.append(new_ctrl)
 			self.tag_file.append([])
 
+	def read_all_files(self, stdin_flag=False):
+		for i, file in enumerate(self.read_files):
+			ctrl = self.file_ctrl[i]
+			ctrl.set_file(file, stdin_flag)
 
-	def get_file_ctrl(self):
+	def get_file_ctrl(self, stdin_flag=False):
 		if self.read_count > 0:
-			if len(self.tag_file[display.read_index - 1]) > 0:
-				ctrl = display.tag_file[display.read_index - 1][-1]
+			if len(self.tag_file[self.read_index - 1]) > 0:
+				ctrl = self.tag_file[self.read_index - 1][-1]
 			else:
 				file = self.read_files[self.read_index - 1]
 				ctrl = self.file_ctrl[self.read_index - 1]
-				ctrl.set_file(file)
+				ctrl.set_file(file, stdin_flag)
 
 			return ctrl
-
 
 	def next_file_ctrl(self, count):
 		if (self.read_index + count) <= self.read_count:
@@ -469,14 +548,12 @@ class DispCtrl():
 			self.read_index = self.read_count
 		return self.get_file_ctrl()
 
-
 	def prev_file_ctrl(self, count):
 		if (self.read_index - count) > 0:
 			self.read_index -= count
 		else:
 			self.read_index = 1
 		return self.get_file_ctrl()
-
 
 	def srch_act_ctrl(self, file):
 		find_flag = False
@@ -486,73 +563,59 @@ class DispCtrl():
 			if ctrl.act:
 				find_flag = True
 
-		if find_flag == False:
+		if find_flag is False:
 			for ctrl in self.tag_file[self.read_index - 1]:
 				if ctrl.read_file == file:
 					find_flag = True
 					break
 
-		if find_flag == False:
+		if find_flag is False:
 			ctrl = None
 
 		return ctrl
 
-
 	def clear_eol(self):
-		print(f"\x1b[0K", end="") # ƒJ[ƒ\ƒ‹ˆÊ’u‚©‚ç‰E‘¤Á‹
-
+		print("\x1b[0K", end="") # ã‚«ãƒ¼ã‚½ãƒ«ä½ç½®ã‹ã‚‰å³å´æ¶ˆå»
 
 	def clear_eob(self):
-		print(f"\x1b[0J", end="") # ƒJ[ƒ\ƒ‹ˆÊ’u‚©‚ç‰æ–Ê‰E‰º‚Ü‚ÅÁ‹
-
+		print("\x1b[0J", end="") # ã‚«ãƒ¼ã‚½ãƒ«ä½ç½®ã‹ã‚‰ç”»é¢å³ä¸‹ã¾ã§æ¶ˆå»
 
 	def clear_screen(self):
-		print(f"\x1b[2J", end="")
+		print("\x1b[2J", end="")
 		self.move_cursor(1, 1)
-
 
 	def move_cursor(self, x, y):
 		print(f"\x1b[{y};{x}H", end="")
 		sys.stdout.flush()
 
-
 	def puts(self,  str):
-		#print(f"{str}", end="")
 		print(f"{str}", end="", flush=True)
-		#sys.stdout.flush()
-
 
 	def move_print(self, x, y, str):
 		self.move_cursor(x, y)
 		self.clear_eol()
 		self.puts(f"{str}")
 
-
 	def clear_tail_line(self):
 		self.move_cursor(1, self.term_lines)
 		self.clear_eol()
 
-
 	def delete_top_line(self):
 		self.move_cursor(1, 1)
-		print(f"\x1b[M", end="")
-
+		print("\x1b[M", end="")
 
 	def insert_top_line(self):
 		self.move_cursor(1, 1)
-		print(f"\x1bM", end="")
-
+		print("\x1bM", end="")
 
 	def backspace(self):
-		self.puts(f"\x1b[D \x1b[D")
-
+		self.puts("\x1b[D \x1b[D")
 
 	def visible_cursor(self, flag=True):
 		if flag:
-			self.puts(f"\x1b[?25h")
+			self.puts("\x1b[?25h")
 		else:
-			self.puts(f"\x1b[?25l")
-
+			self.puts("\x1b[?25l")
 
 	def disp_message(self, msg, minus=0):
 		if self.term_lines > minus:
@@ -560,88 +623,89 @@ class DispCtrl():
 			self.clear_eob()
 			self.puts(f"\x1b[7m{msg}\x1b[m")
 
-
 	def set_help(self):
 		help_str="""
-y(ƒL[)ƒRƒ}ƒ“ƒhz
-    ^X          Ctrl+X‚ğ•\‚·
-    <n>         ƒRƒ}ƒ“ƒh’¼‘O‚É”šƒL[‚Åw’è‚³‚ê‚é’l
-    <a-z>       'a'`'z'‚Ì1•¶šƒL[“ü—Í‚ğ•\‚·
+ã€(ã‚­ãƒ¼)ã‚³ãƒãƒ³ãƒ‰ã€‘
+    ^X          Ctrl+Xã‚’è¡¨ã™
+    <n>         ã‚³ãƒãƒ³ãƒ‰ç›´å‰ã«æ•°å­—ã‚­ãƒ¼ã§æŒ‡å®šã•ã‚Œã‚‹å€¤
+    <a-z>       'a'ï½'z'ã®1æ–‡å­—ã‚­ãƒ¼å…¥åŠ›ã‚’è¡¨ã™
 				
-  ƒŠî–{„
-    ^H          ƒRƒ}ƒ“ƒh‚Ìƒwƒ‹ƒv‚ğ•\¦
-    q           I—¹
+  ï¼œåŸºæœ¬ï¼
+    ^H          ã‚³ãƒãƒ³ãƒ‰ã®ãƒ˜ãƒ«ãƒ—ã‚’è¡¨ç¤º
+    q           çµ‚äº†
 
-  ƒƒXƒNƒ[ƒ‹„
-	f,SPACE     <n>‰æ–Êæ‚ÉƒXƒNƒ[ƒ‹(<n>w’è‚È‚µ:1‰æ–Ê)
-    b           <n>‰æ–Ê‘O‚ÉƒXƒNƒ[ƒ‹(<n>w’è‚È‚µ:1‰æ–Ê)
-    d           <n>”¼‰æ–Êæ‚ÉƒXƒNƒ[ƒ‹(<n>w’è‚È‚µ:”¼‰æ–Ê)
-    u           <n>”¼‰æ–Ê‘O‚ÉƒXƒNƒ[ƒ‹(<n>w’è‚È‚µ:”¼‰æ–Ê)
-    j           <n>sæ‚ÉƒXƒNƒ[ƒ‹(<n>w’è‚È‚µ:1s)
-    k           <n>s‘O‚ÉƒXƒNƒ[ƒ‹(<n>w’è‚È‚µ:1s)
-	>           ‰E‚Ö<n>ƒJƒ‰ƒ€•ªƒXƒNƒ[ƒ‹(<n>w’è‚È‚µ:‰æ–Ê•‚Ì”¼•ª)
-    <           ¶‚Ö<n>ƒJƒ‰ƒ€•ªƒXƒNƒ[ƒ‹(<n>w’è‚È‚µ:‰æ–Ê•‚Ì”¼•ª)
+  ï¼œã‚¹ã‚¯ãƒ­ãƒ¼ãƒ«ï¼
+	f,SPACE     <n>ç”»é¢å…ˆã«ã‚¹ã‚¯ãƒ­ãƒ¼ãƒ«(<n>æŒ‡å®šãªã—:1ç”»é¢)
+    b           <n>ç”»é¢å‰ã«ã‚¹ã‚¯ãƒ­ãƒ¼ãƒ«(<n>æŒ‡å®šãªã—:1ç”»é¢)
+    d           <n>åŠç”»é¢å…ˆã«ã‚¹ã‚¯ãƒ­ãƒ¼ãƒ«(<n>æŒ‡å®šãªã—:åŠç”»é¢)
+    u           <n>åŠç”»é¢å‰ã«ã‚¹ã‚¯ãƒ­ãƒ¼ãƒ«(<n>æŒ‡å®šãªã—:åŠç”»é¢)
+    j           <n>è¡Œå…ˆã«ã‚¹ã‚¯ãƒ­ãƒ¼ãƒ«(<n>æŒ‡å®šãªã—:1è¡Œ)
+    k           <n>è¡Œå‰ã«ã‚¹ã‚¯ãƒ­ãƒ¼ãƒ«(<n>æŒ‡å®šãªã—:1è¡Œ)
+	>           å³ã¸<n>ã‚«ãƒ©ãƒ åˆ†ã‚¹ã‚¯ãƒ­ãƒ¼ãƒ«(<n>æŒ‡å®šãªã—:ç”»é¢å¹…ã®åŠåˆ†)
+    <           å·¦ã¸<n>ã‚«ãƒ©ãƒ åˆ†ã‚¹ã‚¯ãƒ­ãƒ¼ãƒ«(<n>æŒ‡å®šãªã—:ç”»é¢å¹…ã®åŠåˆ†)
 
-  ƒƒ^ƒOƒWƒƒƒ“ƒv„
-    i           ƒJ[ƒ\ƒ‹ˆÊ’u‚Ì•¶š—ñ‚Åƒ^ƒOƒWƒƒƒ“ƒv
-	I           ƒJ[ƒ\ƒ‹ˆÊ’u‚Ì•¶š—ñ‚Åƒ^ƒOƒWƒƒƒ“ƒv(•¡”ƒ^ƒO:ƒƒjƒ…[‚©‚ç‘I‘ğ)
-    o           ƒ^ƒOƒWƒƒƒ“ƒv‘O‚ÌˆÊ’u‚Ö–ß‚é
-    r           w’è‚µ‚½ƒ^ƒOƒtƒ@ƒCƒ‹‚ğ’Ç‰Á“Ç‚İ
+  ï¼œã‚¿ã‚°ã‚¸ãƒ£ãƒ³ãƒ—ï¼
+    i           ã‚«ãƒ¼ã‚½ãƒ«ä½ç½®ã®æ–‡å­—åˆ—ã§ã‚¿ã‚°ã‚¸ãƒ£ãƒ³ãƒ—
+	I           ã‚«ãƒ¼ã‚½ãƒ«ä½ç½®ã®æ–‡å­—åˆ—ã§ã‚¿ã‚°ã‚¸ãƒ£ãƒ³ãƒ—(è¤‡æ•°ã‚¿ã‚°:ãƒ¡ãƒ‹ãƒ¥ãƒ¼ã‹ã‚‰é¸æŠ)
+    o           ã‚¿ã‚°ã‚¸ãƒ£ãƒ³ãƒ—å‰ã®ä½ç½®ã¸æˆ»ã‚‹
+    r           æŒ‡å®šã—ãŸã‚¿ã‚°ãƒ•ã‚¡ã‚¤ãƒ«ã‚’è¿½åŠ èª­è¾¼ã¿
+    a           å¼•æ•°ã§æŒ‡å®šã—ãŸå…¨ãƒ•ã‚¡ã‚¤ãƒ«åˆ†ã®ã‚¿ã‚°æƒ…å ±ä½œæˆ
 
-  ƒƒJ[ƒ\ƒ‹ˆÚ“®„
-    J           ƒJ[ƒ\ƒ‹‚ğ<n>s‰º‚ÉˆÚ“®(<n>w’è‚È‚µ:1s)
-    K           ƒJ[ƒ\ƒ‹‚ğ<n>sã‚ÉˆÚ“®(<n>w’è‚È‚µ:1s)
-    M           ƒJ[ƒ\ƒ‹‚ğ‰æ–Ê“à’†‰›s‚ÉˆÚ“®
-    l           ƒJ[ƒ\ƒ‹‚ğŸ‚Ì<n>”Ô–Ú‚ÌƒL[ƒ[ƒh‚ÉˆÚ“®(<n>w’è‚È‚µ:1”Ô–Ú)
-    h           ƒJ[ƒ\ƒ‹‚ğ‘O‚Ì<n>”Ô–Ú‚ÌƒL[ƒ[ƒh‚ÉˆÚ“®(<n>w’è‚È‚µ:1”Ô–Ú)
-    g           ƒtƒ@ƒCƒ‹‚Ì<n>s–Ú‚ğ•\¦(<n>w’è‚È‚µ:æ“ªs)
-    G           ƒtƒ@ƒCƒ‹‚Ì<n>s–Ú‚ğ•\¦(<n>w’è‚È‚µ:ÅIs)
-    {,},[,]     ƒJ[ƒ\ƒ‹ˆÊ’u‚ÌŠ‡ŒÊ‚É‘Î‰‚·‚éŠ‡ŒÊ‚ÖˆÚ“®
-    m<a-z>      Œ»İ‚Ì‰æ–Ê/ƒJ[ƒ\ƒ‹ˆÊ’u‚ğ“ü—ÍƒL[•¶š‚Öİ’è
-    @           Œ»İ‚Ì‰æ–Ê/ƒJ[ƒ\ƒ‹ˆÊ’u‚ğİ’è
-    '<a-z>      “ü—ÍƒL[•¶š‚Éİ’è‚³‚ê‚½‰æ–Ê/ƒJ[ƒ\ƒ‹ˆÊ’u‚ÖˆÚ“®
-    ''          ˆÚ“®’¼‘O‚Ì‰æ–Ê/ƒJ[ƒ\ƒ‹ˆÊ’u‚Ö–ß‚é
+  ï¼œã‚«ãƒ¼ã‚½ãƒ«ç§»å‹•ï¼
+    J           ã‚«ãƒ¼ã‚½ãƒ«ã‚’<n>è¡Œä¸‹ã«ç§»å‹•(<n>æŒ‡å®šãªã—:1è¡Œ)
+    K           ã‚«ãƒ¼ã‚½ãƒ«ã‚’<n>è¡Œä¸Šã«ç§»å‹•(<n>æŒ‡å®šãªã—:1è¡Œ)
+    M           ã‚«ãƒ¼ã‚½ãƒ«ã‚’ç”»é¢å†…ä¸­å¤®è¡Œã«ç§»å‹•
+    l           ã‚«ãƒ¼ã‚½ãƒ«ã‚’æ¬¡ã®<n>ç•ªç›®ã®ã‚­ãƒ¼ãƒ¯ãƒ¼ãƒ‰ã«ç§»å‹•(<n>æŒ‡å®šãªã—:1ç•ªç›®)
+    h           ã‚«ãƒ¼ã‚½ãƒ«ã‚’å‰ã®<n>ç•ªç›®ã®ã‚­ãƒ¼ãƒ¯ãƒ¼ãƒ‰ã«ç§»å‹•(<n>æŒ‡å®šãªã—:1ç•ªç›®)
+    g           ãƒ•ã‚¡ã‚¤ãƒ«ã®<n>è¡Œç›®ã‚’è¡¨ç¤º(<n>æŒ‡å®šãªã—:å…ˆé ­è¡Œ)
+    G           ãƒ•ã‚¡ã‚¤ãƒ«ã®<n>è¡Œç›®ã‚’è¡¨ç¤º(<n>æŒ‡å®šãªã—:æœ€çµ‚è¡Œ)
+    {,},[,]     ã‚«ãƒ¼ã‚½ãƒ«ä½ç½®ã®æ‹¬å¼§ã«å¯¾å¿œã™ã‚‹æ‹¬å¼§ã¸ç§»å‹•
+    m<a-z>      ç¾åœ¨ã®ç”»é¢/ã‚«ãƒ¼ã‚½ãƒ«ä½ç½®ã‚’å…¥åŠ›ã‚­ãƒ¼æ–‡å­—ã¸è¨­å®š
+    @           ç¾åœ¨ã®ç”»é¢/ã‚«ãƒ¼ã‚½ãƒ«ä½ç½®ã‚’è¨­å®š
+    '<a-z>      å…¥åŠ›ã‚­ãƒ¼æ–‡å­—ã«è¨­å®šã•ã‚ŒãŸç”»é¢/ã‚«ãƒ¼ã‚½ãƒ«ä½ç½®ã¸ç§»å‹•
+    ''          ç§»å‹•ç›´å‰ã®ç”»é¢/ã‚«ãƒ¼ã‚½ãƒ«ä½ç½®ã¸æˆ»ã‚‹
 
 
-  ƒŒŸõ„
-    /           w’è‚µ‚½•¶š—ñ‚Å‡•ûŒüŒŸõ(Š®‘Sˆê’v)
-    ?           w’è‚µ‚½•¶š—ñ‚Å‹t•ûŒüŒŸõ(Š®‘Sˆê’v)
-                  ^G     ƒJ[ƒ\ƒ‹ˆÊ’u‚Ì•¶š—ñ‚ğæ‚İ
-                  ^F     ƒJ[ƒ\ƒ‹‚ğ‰E‚ÉˆÚ“®
-                  ^B     ƒJ[ƒ\ƒ‹‚ğ¶‚ÉˆÚ“®
-                  ^D     ƒJ[ƒ\ƒ‹ˆÊ’u‚Ì•¶š‚ğíœ
-                  ^H     ƒJ[ƒ\ƒ‹‘O‚Ì•¶š‚ğíœ
-                  ^N, ^P ŒŸõ—š—ğ‚Ì•¶š—ñƒŠƒXƒg‚ğ•\¦
-                  ESC    “ü—Í‚ÌƒLƒƒƒ“ƒZƒ‹
-    n           ’¼‘O‚ÉÀs‚³‚ê‚½ŒŸõ‚ğ‡•ûŒü‚Ö<n>‰ñÀs(<n>w’è‚È‚µ:1‰ñ)
-    p           ’¼‘O‚ÉÀs‚³‚ê‚½ŒŸõ‚ğ‹t•ûŒü‚Ö<n>‰ñÀs(<n>w’è‚È‚µ:1‰ñ)
+  ï¼œæ¤œç´¢ï¼
+    /           æŒ‡å®šã—ãŸæ–‡å­—åˆ—ã§é †æ–¹å‘æ¤œç´¢(å®Œå…¨ä¸€è‡´)
+    ?           æŒ‡å®šã—ãŸæ–‡å­—åˆ—ã§é€†æ–¹å‘æ¤œç´¢(å®Œå…¨ä¸€è‡´)
+                  ^G     ã‚«ãƒ¼ã‚½ãƒ«ä½ç½®ã®æ–‡å­—åˆ—ã‚’å–è¾¼ã¿
+                  ^F     ã‚«ãƒ¼ã‚½ãƒ«ã‚’å³ã«ç§»å‹•
+                  ^B     ã‚«ãƒ¼ã‚½ãƒ«ã‚’å·¦ã«ç§»å‹•
+                  ^D     ã‚«ãƒ¼ã‚½ãƒ«ä½ç½®ã®æ–‡å­—ã‚’å‰Šé™¤
+                  ^H     ã‚«ãƒ¼ã‚½ãƒ«å‰ã®æ–‡å­—ã‚’å‰Šé™¤
+                  ^N, ^P æ¤œç´¢å±¥æ­´ã®æ–‡å­—åˆ—ãƒªã‚¹ãƒˆã‚’è¡¨ç¤º
+                  ESC    å…¥åŠ›ã®ã‚­ãƒ£ãƒ³ã‚»ãƒ«
+    n           ç›´å‰ã«å®Ÿè¡Œã•ã‚ŒãŸæ¤œç´¢ã‚’é †æ–¹å‘ã¸<n>å›å®Ÿè¡Œ(<n>æŒ‡å®šãªã—:1å›)
+    p           ç›´å‰ã«å®Ÿè¡Œã•ã‚ŒãŸæ¤œç´¢ã‚’é€†æ–¹å‘ã¸<n>å›å®Ÿè¡Œ(<n>æŒ‡å®šãªã—:1å›)
 
-  ƒƒtƒ@ƒCƒ‹Ø‘Ö„
-	N           •¡”ƒtƒ@ƒCƒ‹“Ç‚İA<n>”ÔŒã‚Ìƒtƒ@ƒCƒ‹‚ğ•\¦(<n>w’è‚È‚µ:’¼Œã)
-    P           •¡”ƒtƒ@ƒCƒ‹“Ç‚İA<n>”Ô‘O‚Ìƒtƒ@ƒCƒ‹‚ğ•\¦(<n>w’è‚È‚µ:’¼‘O)
+  ï¼œãƒ•ã‚¡ã‚¤ãƒ«åˆ‡æ›¿ï¼
+	N           è¤‡æ•°ãƒ•ã‚¡ã‚¤ãƒ«èª­è¾¼ã¿æ™‚ã€<n>ç•ªå¾Œã®ãƒ•ã‚¡ã‚¤ãƒ«ã‚’è¡¨ç¤º(<n>æŒ‡å®šãªã—:ç›´å¾Œ)
+    P           è¤‡æ•°ãƒ•ã‚¡ã‚¤ãƒ«èª­è¾¼ã¿æ™‚ã€<n>ç•ªå‰ã®ãƒ•ã‚¡ã‚¤ãƒ«ã‚’è¡¨ç¤º(<n>æŒ‡å®šãªã—:ç›´å‰)
 
-  ƒ‚»‚Ì‘¼„
-    t           ƒ^ƒuƒXƒgƒbƒv•‚ğ<n>‚É•ÏX
-    ^G          ƒtƒ@ƒCƒ‹–¼AƒJ[ƒ\ƒ‹ˆÊ’u‚ğ•\¦
-    ^L          ‰æ–Ê‚ÌÄ•\¦(‰æ–ÊƒTƒCƒY‚ğÄæ“¾)
+  ï¼œãã®ä»–ï¼
+    t           ã‚¿ãƒ–ã‚¹ãƒˆãƒƒãƒ—å¹…ã‚’<n>ã«å¤‰æ›´
+    s           syntaxå¼·èª¿ãƒ‘ã‚¿ãƒ¼ãƒ³åˆ‡æ›¿ãˆ(python, C++, C, awk, java)
+    ^G          ãƒ•ã‚¡ã‚¤ãƒ«åã€ã‚«ãƒ¼ã‚½ãƒ«ä½ç½®ã‚’è¡¨ç¤º
+    ^L          ç”»é¢ã®å†è¡¨ç¤º(ç”»é¢ã‚µã‚¤ã‚ºã‚’å†å–å¾—)
 
-y‰Šúİ’èz
-   ŠÂ‹«•Ï” MISTLESS_INIT ‚Éİ’è‚³‚ê‚½ƒtƒ@ƒCƒ‹‚ğ‹N“®‚É“Ç‚İ‚İA
-   ƒ†[ƒUƒL[’è‹`‚ğ“o˜^‚·‚éB 
-   ƒ‘®„
-     map “ü—ÍƒL[ƒpƒ^[ƒ“ •ÏŠ·ƒpƒ^[ƒ“
-	 ¦ƒpƒ^[ƒ““à‚Ì§ŒäƒR[ƒh‚ğ16i”(\\xFF)A8i”(\\777)‚Å•\‹L‚·‚é‚±‚Æ‚ª‰Â”\
+ã€åˆæœŸè¨­å®šã€‘
+   ç’°å¢ƒå¤‰æ•° MISTLESS_INIT ã«è¨­å®šã•ã‚ŒãŸãƒ•ã‚¡ã‚¤ãƒ«ã‚’èµ·å‹•æ™‚ã«èª­ã¿è¾¼ã¿ã€
+   ãƒ¦ãƒ¼ã‚¶ã‚­ãƒ¼å®šç¾©ã‚’ç™»éŒ²ã™ã‚‹ã€‚ 
+   ï¼œæ›¸å¼ï¼
+     map å…¥åŠ›ã‚­ãƒ¼ãƒ‘ã‚¿ãƒ¼ãƒ³ å¤‰æ›ãƒ‘ã‚¿ãƒ¼ãƒ³
+	 â€»ãƒ‘ã‚¿ãƒ¼ãƒ³å†…ã®åˆ¶å¾¡ã‚³ãƒ¼ãƒ‰ã‚’16é€²æ•°(\\xFF)ã€8é€²æ•°(\\777)ã§è¡¨è¨˜ã™ã‚‹ã“ã¨ãŒå¯èƒ½
 
-y‹@”\d—lz
-  E“ü—Íƒtƒ@ƒCƒ‹‚Ì•¶šƒR[ƒh(UTF8, euc“™)‚ğ•\¦‰æ–Ê‚Ì•¶šƒR[ƒh‚É•ÏŠ·‚µ‚Ä•\¦
-  E“ü—Íƒtƒ@ƒCƒ‹‚ÌŠg’£q‚É‰‚¶‚ÄAƒL[ƒ[ƒh/ƒRƒƒ“ƒg“™‚ğF•ª‚¯•\¦
-    (.py .h .cpp .c .awk ‚É‘Î‰)
-  E“ü—Íƒtƒ@ƒCƒ‹‚ÌŠg’£q‚É‰‚¶‚ÄAƒ^ƒOî•ñ‚ğ©“®¶¬
-    (‚½‚¾‚µA‹N“®‚Éƒ^ƒOƒtƒ@ƒCƒ‹‚ğ“Ç‚İ‚ñ‚¾ê‡‚ÍA©“®¶¬‚µ‚È‚¢)
-  E“¯ˆêƒL[ƒ[ƒh‚Ìƒ^ƒOî•ñ‚ª•¡”‚ ‚éê‡‚ÍA‘I‘ğ‚µ‚Äƒ^ƒOƒWƒƒƒ“ƒv‰Â”\
+ã€æ©Ÿèƒ½ä»•æ§˜ã€‘
+  ãƒ»å…¥åŠ›ãƒ•ã‚¡ã‚¤ãƒ«ã®æ–‡å­—ã‚³ãƒ¼ãƒ‰(UTF8, eucç­‰)ã‚’è¡¨ç¤ºç”»é¢ã®æ–‡å­—ã‚³ãƒ¼ãƒ‰ã«å¤‰æ›ã—ã¦è¡¨ç¤º
+  ãƒ»å…¥åŠ›ãƒ•ã‚¡ã‚¤ãƒ«ã®æ‹¡å¼µå­ã«å¿œã˜ã¦ã€ã‚­ãƒ¼ãƒ¯ãƒ¼ãƒ‰/ã‚³ãƒ¡ãƒ³ãƒˆç­‰ã‚’è‰²åˆ†ã‘è¡¨ç¤º
+    (.py .h .cpp .c .awk ã«å¯¾å¿œ)
+  ãƒ»å…¥åŠ›ãƒ•ã‚¡ã‚¤ãƒ«ã®æ‹¡å¼µå­ã«å¿œã˜ã¦ã€ã‚¿ã‚°æƒ…å ±ã‚’è‡ªå‹•ç”Ÿæˆ
+    (ãŸã ã—ã€èµ·å‹•æ™‚ã«ã‚¿ã‚°ãƒ•ã‚¡ã‚¤ãƒ«ã‚’èª­ã¿è¾¼ã‚“ã å ´åˆã¯ã€è‡ªå‹•ç”Ÿæˆã—ãªã„)
+  ãƒ»åŒä¸€ã‚­ãƒ¼ãƒ¯ãƒ¼ãƒ‰ã®ã‚¿ã‚°æƒ…å ±ãŒè¤‡æ•°ã‚ã‚‹å ´åˆã¯ã€é¸æŠã—ã¦ã‚¿ã‚°ã‚¸ãƒ£ãƒ³ãƒ—å¯èƒ½
 
 		"""
-		ctrl = FileCtrl()
+		ctrl = FileCtrl(display)
 		lines = help_str.splitlines()
 		ctrl.data = lines[1:]
 		ctrl.max_line = len(ctrl.data)
@@ -658,7 +722,6 @@ class DispCtrl():
 
 		return ctrl
 
-
 	def set_help_msg(self):
 		msg = "<HELP> Press SPACE-key for more, or q when done."
 		return msg
@@ -666,22 +729,27 @@ class DispCtrl():
 
 class FileCtrl():
 	"""
-	“ü—Íƒtƒ@ƒCƒ‹‚ÉŠÖ‚·‚é§Œä
+	å…¥åŠ›ãƒ•ã‚¡ã‚¤ãƒ«ã«é–¢ã™ã‚‹åˆ¶å¾¡
 
 	Attributes:
-		read_file : “ü—Íƒtƒ@ƒCƒ‹–¼
-		act       : ƒf[ƒ^“Ç‚İ•\¦
-		data []   : “Ç‚İƒf[ƒ^
-		coating []: “Ç‚İƒf[ƒ^s‚Ö‚Ì‹­’²•\¦
-		max_line  : “Ç‚İƒf[ƒ^s
-		disp_top  : •\¦ŠJnsˆÊ’u
-		disp_left : •\¦ŠJn—ñˆÊ’u
-		cursor_x  : ƒJ[ƒ\ƒ‹sˆÊ’u
-		cursor_y  : ƒJ[ƒ\ƒ‹—ñˆÊ’u
-		tag_key   : ƒ^ƒOƒWƒƒƒ“ƒv‚ÌƒL[ƒ[ƒh
-		mark {}   : ‰æ–Ê/ƒJ[ƒ\ƒ‹ˆÊ’u{'@a-z': [top, left, x, y]}
+		read_file : å…¥åŠ›ãƒ•ã‚¡ã‚¤ãƒ«å
+		act       : ãƒ‡ãƒ¼ã‚¿èª­è¾¼ã¿è¡¨ç¤º
+		data []   : èª­è¾¼ã¿ãƒ‡ãƒ¼ã‚¿
+		coating []: èª­è¾¼ã¿ãƒ‡ãƒ¼ã‚¿è¡Œã¸ã®å¼·èª¿è¡¨ç¤º
+		max_line  : èª­è¾¼ã¿ãƒ‡ãƒ¼ã‚¿è¡Œ
+		disp_top  : è¡¨ç¤ºé–‹å§‹è¡Œä½ç½®
+		disp_left : è¡¨ç¤ºé–‹å§‹åˆ—ä½ç½®
+		cursor_x  : ã‚«ãƒ¼ã‚½ãƒ«è¡Œä½ç½®
+		cursor_y  : ã‚«ãƒ¼ã‚½ãƒ«åˆ—ä½ç½®
+		tag_key   : ã‚¿ã‚°ã‚¸ãƒ£ãƒ³ãƒ—æ™‚ã®ã‚­ãƒ¼ãƒ¯ãƒ¼ãƒ‰
+		mark {}   : ç”»é¢/ã‚«ãƒ¼ã‚½ãƒ«ä½ç½®{'@a-z': [top, left, x, y]}
+		display   : DispCtrlã‚¯ãƒ©ã‚¹å‚ç…§ç”¨
+		history   : HistoryCtrlã‚¯ãƒ©ã‚¹å‚ç…§ç”¨
+		keyctrl   : KeyCtrlã‚¯ãƒ©ã‚¹å‚ç…§ç”¨
+		taginfo   : TagInfoã‚¯ãƒ©ã‚¹å‚ç…§ç”¨
 	"""
-	def __init__(self):
+
+	def __init__(self, display):
 		self.read_file = ""
 		self.act = False
 		self.data = []
@@ -693,35 +761,47 @@ class FileCtrl():
 		self.cursor_y = 0
 		self.tag_key = ""
 		self.mark = {}
+		self.display = display
+		self.history = display.history
+		self.keyctrl = display.keyctrl
+		self.taginfo = display.taginfo
 
-
-	def set_file(self, file):
+	def set_file(self, file, stdin_flag=False):
 		set_ext_pattern(file)
 		self.read_file = file
-		if self.act == False:
-			ctrl = display.srch_act_ctrl(file)
-			if ctrl == None:
-				with open(file, "rb") as f:
-					txt = f.read()
-				# “ü—Í•¶š—ñ‚ÌƒGƒ“ƒR[ƒfƒBƒ“ƒO”»’è
+		if self.act is False:
+			ctrl = self.display.srch_act_ctrl(file)
+			if ctrl is None:
+				# å…¥åŠ›æ–‡å­—åˆ—ã®èª­è¾¼ã¿
+				if stdin_flag:
+					txt = sys.stdin.buffer.read()
+				else:
+					with open(file, "rb") as f:
+						txt = f.read()
+
+				# å…¥åŠ›æ–‡å­—åˆ—ã®ã‚¨ãƒ³ã‚³ãƒ¼ãƒ‡ã‚£ãƒ³ã‚°åˆ¤å®š
 				guess = chardet.detect(txt).get("encoding")
-				if guess is None:
-					guess = locale.getpreferredencoding()
-				elif guess == "ISO-2022-JP":
-					# JIS7ŒÀ’è‚Ì“Áêˆ—
+				if guess == "ISO-2022-JP":
+					# JIS7é™å®šã®ç‰¹æ®Šå‡¦ç†
 					guess = "ISO-2022-JP-EXT"
 				elif guess == "ISO-8859-1" or guess == "KOI8-R":
-					# JIS8->JIS7•ÏŠ·(“Áêˆ—)
+					# JIS8->JIS7å¤‰æ›(ç‰¹æ®Šå‡¦ç†)
 					cnv_txt = bytearray(txt)
 					for i, ascii in enumerate(cnv_txt):
 						if ascii >= 0xa1 and ascii <= 0xdf:
 							cnv_txt[i] = ascii - 0x80
 					txt = bytes(cnv_txt)
 					guess = "ISO-2022-JP-EXT"
-				self.data = txt.decode(guess).splitlines()
+				elif guess not in USABLE_CODE:
+					guess = locale.getpreferredencoding()
+
+				txt = txt.decode(guess).replace("â”€", "â€•")
+				if os.name == "nt":
+					txt = re.sub(r"([â”Œâ”¬â”â”œâ”¼â”¤â””â”´â”˜â”‚])", "\\1 ", txt)
+				self.data = txt.splitlines()
 				self.set_line_coating()
 
-				taginfo.analyze_file(file, self.data)
+				self.taginfo.analyze_file(file, self.data)
 			else:
 				self.data = ctrl.data
 				self.coating = ctrl.coating
@@ -733,14 +813,12 @@ class FileCtrl():
 			self.cursor_y = 1
 			self.act = True
 
-
 	def add_esc(self, text):
 		return re.sub("([*+.?(){}^$\[\]\-])", "\\\\\\1", text)
 
-
 	def set_line_coating(self):
 		"""
-		s‘S‘Ì‚Ì‹­’²
+		è¡Œå…¨ä½“ã®å¼·èª¿
 		"""
 		if len(multi_line_ptn) == 4:
 			(srch_ptn, start_ptn, end_ptn, esc_ptn) = multi_line_ptn
@@ -750,7 +828,7 @@ class FileCtrl():
 		mark_flag = False
 		for text in self.data:
 			ptn = re.findall(srch_ptn, text)
-			if mark_flag == False:
+			if mark_flag is False:
 				if ptn != []:
 					if ptn[-1] == start_ptn:
 						mark_flag = True
@@ -760,25 +838,26 @@ class FileCtrl():
 					if ptn[0] == end_ptn:
 						mark_flag = False
 
-				if mark_flag == True:
+				if mark_flag is True:
 					self.coating.append(esc_ptn)
 				else:
 					self.coating.append("")
 
-
 	def unicode_len(self, text):
 		"""
-		Š¿šƒR[ƒh‚ğŠÜ‚Ş•¶š—ñ‚Ì’·‚³æ“¾
+		æ¼¢å­—ã‚³ãƒ¼ãƒ‰ã‚’å«ã‚€æ–‡å­—åˆ—ã®é•·ã•å–å¾—
 
 		Args:
-			text (str): •¶š—ñ
+			text (str): æ–‡å­—åˆ—
 
 		Returns:
-			int: ‰æ–Ê•\¦ã‚Ì•(‘SŠp:2, ”¼Šp:1)
+			int: ç”»é¢è¡¨ç¤ºä¸Šã®å¹…(å…¨è§’:2, åŠè§’:1)
 		"""
 		width = 0
 		for char in text:
-			if unicodedata.east_asian_width(char) in ("F", "W", "A"):
+			if re.fullmatch(r"[â”Œâ”¬â”â”œâ”¼â”¤â””â”´â”˜â”‚]", char) is not None:
+				width += 1
+			elif unicodedata.east_asian_width(char) in ("F", "W", "A"):
 				width += 2
 			else:
 				width += 1
@@ -786,19 +865,19 @@ class FileCtrl():
 
 	def judge_border(self, cur_pos, add_len, border_pos):
 		"""
-		ŠJnˆÊ’u/‰ÁZ”/‹«ŠEˆÊ’u‚©‚ç‹«ŠEˆÊ’u‚Ì‘OŒã””»’è
+		é–‹å§‹ä½ç½®/åŠ ç®—æ•°/å¢ƒç•Œä½ç½®ã‹ã‚‰å¢ƒç•Œä½ç½®ã®å‰å¾Œæ•°åˆ¤å®š
 
 		Args:
-			cur_pos (int): ŠJnˆÊ’u(0`)
-			add_len (int): ‰ÁZ”
-			border_pos (int): ‹«ŠEˆÊ’u
+			cur_pos (int): é–‹å§‹ä½ç½®(0ï½)
+			add_len (int): åŠ ç®—æ•°
+			border_pos (int): å¢ƒç•Œä½ç½®
 
 		Returns:
-			touch (int): True:‹«ŠEˆÊ’u‚ÉÚ’n(Œ×‚®ê‡ŠÜ‚Ş)
-			left  (int): ‹«ŠEˆÊ’u‚æ‚è‘O‚Ì•¶š”
-			right (int): ‹«ŠEˆÊ’u‚æ‚èŒã‚Ì•¶š”
+			touch (bool): True:å¢ƒç•Œä½ç½®ã«æ¥åœ°(è·¨ãå ´åˆå«ã‚€)
+			left   (int): å¢ƒç•Œä½ç½®ã‚ˆã‚Šå‰ã®æ–‡å­—æ•°
+			right  (int): å¢ƒç•Œä½ç½®ã‚ˆã‚Šå¾Œã®æ–‡å­—æ•°
 		"""
-		touch = False	# ‹«ŠEˆÊ’u‚Æ‚ÌÚ’n(Œ×‚®ê‡ŠÜ‚Ş)
+		touch = False	# å¢ƒç•Œä½ç½®ã¨ã®æ¥åœ°(è·¨ãå ´åˆå«ã‚€)
 		if (cur_pos + add_len) <= border_pos:
 			left_len = add_len
 			right_len = 0
@@ -816,16 +895,15 @@ class FileCtrl():
 
 		return touch, left_len, right_len
 
-
 	def highlight_text(self, esc_ctrl, line_coating):
 		"""
-		keyword‚Ì‹­’²
+		keywordã®å¼·èª¿
 		"""
 		if line_coating != "":
-			# s‚Ì‹­’²
+			# è¡Œã®å¼·èª¿
 			esc_ctrl.coating_word(".*", line_coating)
 		else:
-			# syntax‚Ì‹­’²
+			# syntaxã®å¼·èª¿
 			iter = re.finditer("[a-zA-Z0-9_]+", esc_ctrl.only_text)
 			for n in iter:
 				start = n.span()[0]
@@ -834,49 +912,49 @@ class FileCtrl():
 				if word in syntax_list:
 					esc_ctrl.coating_pos(start, end, ESC_GREEN)
 
-			# (ƒ_ƒuƒ‹)ƒNƒH[ƒe[ƒVƒ‡ƒ“‚Ì‹­’²İ’è
+			# (ãƒ€ãƒ–ãƒ«)ã‚¯ã‚©ãƒ¼ãƒ†ãƒ¼ã‚·ãƒ§ãƒ³ã®å¼·èª¿è¨­å®š
 			esc_ctrl.coating_word(quote_ptn, ESC_CYAN)
 
-			# ƒRƒƒ“ƒg‚Ì‹­’²
+			# ã‚³ãƒ¡ãƒ³ãƒˆã®å¼·èª¿
 			esc_ctrl.coating_word(comment_ptn, ESC_BLUE)
 
-		# §ŒäƒR[ƒh‚Ì‹­’²
+		# åˆ¶å¾¡ã‚³ãƒ¼ãƒ‰ã®å¼·èª¿
 		esc_ctrl.coating_word("[\x00-\x08\x0a-\x1f]", ESC_REVERSE)
 
-		# ŒŸõƒL[‚Ì‹­’²
-		if display.srch_str != "":
-			esc_ctrl.coating_word(display.srch_str, ESC_BG_YELLOW)
+		# æ¤œç´¢ã‚­ãƒ¼ã®å¼·èª¿
+		if self.display.srch_str != "":
+			esc_ctrl.coating_word(self.display.srch_str, ESC_BG_YELLOW)
 
 
 	def cut_text(self, line, start, width, coating):
 		"""
-		•¶š—ñ‚©‚çŠJnˆÊ’u/•‚Åw’è‚µ‚½•¶š—ñ‚ÌØo‚µ
+		æ–‡å­—åˆ—ã‹ã‚‰é–‹å§‹ä½ç½®/å¹…ã§æŒ‡å®šã—ãŸæ–‡å­—åˆ—ã®åˆ‡å‡ºã—
 
 		Args:
-			line (char): •¶š—ñ
-			start (int): ŠJnˆÊ’u(1`)
-			width (int): Øo‚µ•
-			coating (str): s‹­’²ESCƒV[ƒPƒ“ƒX
-
+			line (char): æ–‡å­—åˆ—
+			start (int): é–‹å§‹ä½ç½®(1ï½)
+			width (int): åˆ‡å‡ºã—å¹…
+			coating (str): è¡Œå¼·èª¿ESCã‚·ãƒ¼ã‚±ãƒ³ã‚¹
 
 		Returns:
-			str: Øo‚µ‚½•¶š—ñ
+			str: åˆ‡å‡ºã—ãŸæ–‡å­—åˆ—
 		"""
 		esc_ctrl = Escape()
 		esc_ctrl.analyze_text(line)
 		self.highlight_text(esc_ctrl, coating)
 
-		cut_pid = "srch"  # Øo‚µŠJnˆÊ’u‚ÌŒŸõ
+		cut_pid = "srch"  # åˆ‡å‡ºã—é–‹å§‹ä½ç½®ã®æ¤œç´¢
 		cut_txt = ""
-		pre_esc_num = ""  # 1•¶š‘O‚Ì‹­’²•\¦”Ô†
-		pos = 0           # æ“ª‚©‚ç‚Ì•¶š•
-		stt = start - 1   # Øo‚µŠJnˆÊ’u
-		left_more = False # Øo‚µ•¶š‚Ìæ“ª‚ğ"$"•\¦
-		for i, in_char in enumerate(line):
-			# 1•¶š‚Ì•\¦Œ`®‚Æ’·‚³æ“¾
+		pre_esc_num = ""  # 1æ–‡å­—å‰ã®å¼·èª¿è¡¨ç¤ºç•ªå·
+		pos = 0           # å…ˆé ­ã‹ã‚‰ã®æ–‡å­—å¹…
+		stt = start - 1   # åˆ‡å‡ºã—é–‹å§‹ä½ç½®
+		left_more = False # åˆ‡å‡ºã—æ–‡å­—ã®å…ˆé ­ã‚’"$"è¡¨ç¤º
+		for i, in_char in enumerate(esc_ctrl.only_text):
+			# 1æ–‡å­—ã®è¡¨ç¤ºå½¢å¼ã¨é•·ã•å–å¾—
 			key_code = ord(in_char)
 			if key_code == 0x09:	# tab
-				wd = int(pos / display.tab_stop + 1) * display.tab_stop - pos
+				wd = int(pos / self.display.tab_stop + 1) \
+						* self.display.tab_stop - pos
 				ch = " " * wd
 			elif key_code < 0x20:	# ctrl
 				wd = 2
@@ -885,14 +963,14 @@ class FileCtrl():
 				wd = self.unicode_len(in_char)
 				ch = in_char
 
-			# •¶š—ñ‚ÌÅ‰‚ÆÅŒã‚ğ”»’è
+			# æ–‡å­—åˆ—ã®æœ€åˆã¨æœ€å¾Œã‚’åˆ¤å®š
 			if (i == 0) or (i == (len(line) - 1)):
 				line_edge = True
 			else:
 				line_edge = False
 
 			if cut_pid == "srch":
-				# Øo‚µŠJnˆÊ’u‚ÌŒŸõ
+				# åˆ‡å‡ºã—é–‹å§‹ä½ç½®ã®æ¤œç´¢
 				(touch, left, right) = self.judge_border(pos, wd, stt)
 				if left == 0:
 					add_ch = ch
@@ -900,14 +978,14 @@ class FileCtrl():
 					add_ch = MORE_CHAR * right
 
 				if touch:
-					cut_pid = "cut" # Øo‚µ‚ÌŠJn
+					cut_pid = "cut" # åˆ‡å‡ºã—ã®é–‹å§‹
 					if stt > 0 and right == 0:
 						left_more = True
 			else:
-				# Øo‚µ‚ÌŠJn
+				# åˆ‡å‡ºã—ã®é–‹å§‹
 				(touch, left, right) = self.judge_border(pos, wd, stt + width)
 				if right == 0:
-					if left_more or (touch and line_edge == False):
+					if left_more or (touch and line_edge is False):
 						add_ch = MORE_CHAR * wd
 						left_more = False
 					else:
@@ -916,12 +994,12 @@ class FileCtrl():
 					add_ch = MORE_CHAR * left
 
 				if touch:
-					cut_pid = "end" # Øo‚µI—¹
+					cut_pid = "end" # åˆ‡å‡ºã—çµ‚äº†
 
 			esc_num = esc_ctrl.esc_list[i]
 			if (add_ch != "") and (pre_esc_num != esc_num):
 				add_ch = f"\x1b[{esc_num}m" + add_ch
-				if re.match(r"[0-9]|4[0-9]", pre_esc_num) != None:
+				if re.match(r"[0-9]|4[0-9]", pre_esc_num) is not None:
 					add_ch = ESC_INIT + add_ch
 			pre_esc_num = esc_num
 			cut_txt += add_ch
@@ -936,23 +1014,21 @@ class FileCtrl():
 
 		return cut_txt
 
-
 	def disp_line(self):
-		display.clear_screen()
-		display.visible_cursor()
+		self.display.clear_screen()
+		self.display.visible_cursor()
 		start_idx = self.disp_top - 1
-		end_idx = self.disp_top + display.vscroll - 1
+		end_idx = self.disp_top + self.display.vscroll - 1
 		if self.max_line < end_idx:
 			end_idx = self.max_line
 		for i in range(start_idx, end_idx):
 			cut_txt = self.cut_text(self.data[i],
 									self.disp_left,
-									display.term_width,
+									self.display.term_width,
 									self.coating[i])
 									
 			print(f"{cut_txt}")
 		self.disp_fname()
-
 
 	def goto_line(self, row, number):
 		self.set_mark("@")
@@ -965,7 +1041,7 @@ class FileCtrl():
 			self.disp_line()
 		else:
 			if row == 0:
-				disp_top = self.max_line - display.term_lines + 2
+				disp_top = self.max_line - self.display.term_lines + 2
 			else:
 				disp_top = row
 
@@ -977,10 +1053,9 @@ class FileCtrl():
 			self.disp_top = disp_top
 			self.disp_line()
 
-
 	def set_mark(self, char):
 		if char == "":
-			display.move_print(1, display.term_lines, "mark: ")
+			self.display.move_print(1, self.display.term_lines, "mark: ")
 			char = chr(ord(getch()))
 
 		msg = ""
@@ -992,10 +1067,9 @@ class FileCtrl():
 
 		return msg
 
-
 	def goto_mark(self, char):
 		if char == "":
-			display.move_print(1, display.term_lines, "goto mark: ")
+			self.display.move_print(1, self.display.term_lines, "goto mark: ")
 			char = chr(ord(getch()))
 
 		msg = ""
@@ -1016,21 +1090,21 @@ class FileCtrl():
 
 		return msg
 
-
 	def vscroll(self, count, dir):
 		msg = ""
 		if dir == DIR_FORWARD:
-			if (self.disp_top + display.vscroll) <= self.max_line:
-				display.clear_tail_line()
-				idx = self.disp_top + display.vscroll - 1
+			if (self.disp_top + self.display.vscroll) <= self.max_line:
+				self.display.clear_tail_line()
+				idx = self.disp_top + self.display.vscroll - 1
 				for i in range(0, count):
 					if idx < len(self.data):
 						cut_txt = self.cut_text(self.data[idx],
 												self.disp_left,
-												display.term_width,
+												self.display.term_width,
 												self.coating[idx])
-						display.delete_top_line()
-						display.move_print(1, display.term_lines - 1, cut_txt)
+						self.display.delete_top_line()
+						self.display.move_print(
+								1, self.display.term_lines - 1, cut_txt)
 						idx += 1
 						self.disp_top += 1
 					else:
@@ -1045,10 +1119,10 @@ class FileCtrl():
 					if idx >= 0:
 						cut_txt = self.cut_text(self.data[idx],
 												self.disp_left,
-												display.term_width,
+												self.display.term_width,
 												self.coating[idx])
-						display.insert_top_line()
-						display.move_print(1, 1, cut_txt)
+						self.display.insert_top_line()
+						self.display.move_print(1, 1, cut_txt)
 						idx -= 1
 						self.disp_top -= 1
 					else:
@@ -1058,18 +1132,17 @@ class FileCtrl():
 		self.first_word()
 		return msg
 
-
 	def hscroll(self, dir, count):
 		if dir == DIR_FORWARD:
 			if count > 0:
 				self.disp_left += count
 			else:
-				self.disp_left += display.hscroll
+				self.disp_left += self.display.hscroll
 		else:
 			if count > 0:
 				self.disp_left -= count
 			else:
-				self.disp_left -= display.hscroll
+				self.disp_left -= self.display.hscroll
 
 			if self.disp_left < 1:
 				self.disp_left = 1
@@ -1077,14 +1150,14 @@ class FileCtrl():
 		self.first_word()
 		self.disp_line()
 
-
 	def cursor_to_index(self, line, x):
 		pos = 0
 		index = 0
 		for i, in_char in enumerate(line):
 			key_code = ord(in_char)
 			if key_code == 0x09:	# tab
-				wd = int(pos / display.tab_stop + 1) * display.tab_stop - pos
+				wd = int(pos / self.display.tab_stop + 1) \
+						* self.display.tab_stop - pos
 			elif key_code < 0x20:	# ctrl
 				wd = 2
 			else:
@@ -1097,13 +1170,13 @@ class FileCtrl():
 
 		return index
 
-
 	def index_to_cursor(self, line, idx):
 		pos = 0
 		for i, in_char in enumerate(line):
 			key_code = ord(in_char)
 			if key_code == 0x09:	# tab
-				wd = int(pos / display.tab_stop + 1) * display.tab_stop - pos
+				wd = int(pos / self.display.tab_stop + 1) \
+						* self.display.tab_stop - pos
 			elif key_code < 0x20:	# ctrl
 				wd = 2
 			else:
@@ -1115,18 +1188,17 @@ class FileCtrl():
 
 		return (pos + 1)
 	
-
 	def get_word_index(self, text, cur_idx, match_ptn=""):
 		"""
-		‘OŒã‚Ìƒ[ƒhˆÊ’uæ“¾
+		å‰å¾Œã®ãƒ¯ãƒ¼ãƒ‰ä½ç½®å–å¾—
 
 		Args:
-			text (str): •¶š—ñ
-			cur_idx (str): •¶š—ñ‚ÌŒ»İˆÊ’u(0`, -1:•s’è)
+			text (str): æ–‡å­—åˆ—
+			cur_idx (str): æ–‡å­—åˆ—ã®ç¾åœ¨ä½ç½®(0ï½, -1:ä¸å®š)
 
 		Returns:
-			int: ˆê‚Â‘O‚Ìƒ[ƒhˆÊ’u(0`:—L, -1:–³)
-			int: ˆê‚ÂŒã‚Ìƒ[ƒhˆÊ’u(0`:—L, -1:–³)
+			int: ä¸€ã¤å‰ã®ãƒ¯ãƒ¼ãƒ‰ä½ç½®(0ï½:æœ‰, -1:ç„¡)
+			int: ä¸€ã¤å¾Œã®ãƒ¯ãƒ¼ãƒ‰ä½ç½®(0ï½:æœ‰, -1:ç„¡)
 		"""
 		prev_idx = -1
 		next_idx = -1
@@ -1146,9 +1218,7 @@ class FileCtrl():
 
 		return prev_idx, next_idx
 
-
 	def first_word(self):
-		#line = self.data[(self.disp_top - 1) + (self.cursor_y - 1)]
 		(line, line_idx, char_idx, pos) = self.get_current_param()
 		find_flag = False
 		iter = re.finditer(r"[a-zA-Z0-9_]+", line)
@@ -1159,24 +1229,25 @@ class FileCtrl():
 				find_flag = True
 				break
 
-		if find_flag == True:
+		if find_flag is True:
 			self.cursor_x = pos - (self.disp_left - 1)
 		else:
 			self.cursor_x = 1
 
-
 	def get_current_param(self):
 		line_idx = (self.disp_top - 1) + (self.cursor_y - 1)
-		line = self.data[line_idx]
+		if len(self.data):
+			line = self.data[line_idx]
+		else:
+			line = ""
 		pos = self.disp_left + self.cursor_x - 1
 		char_idx = self.cursor_to_index(line, pos)
 		return line, line_idx, char_idx, pos
 
-
 	def next_word(self, count):
 		(line, line_idx, idx, pos) = self.get_current_param()
 		end_flag = False
-		while end_flag == False:
+		while end_flag is False:
 			(prev_idx, next_idx) = self.get_word_index(line, idx)
 			if next_idx >= 0:
 				self.scroll_caret(line_idx, next_idx)
@@ -1193,11 +1264,10 @@ class FileCtrl():
 				else:
 					end_flag = True
 
-
 	def prev_word(self, count):
 		(line, line_idx, idx, pos) = self.get_current_param()
 		end_flag = False
-		while end_flag == False:
+		while end_flag is False:
 			(prev_idx, next_idx) = self.get_word_index(line, idx)
 			if prev_idx >= 0:
 				self.scroll_caret(line_idx, prev_idx)
@@ -1209,36 +1279,35 @@ class FileCtrl():
 				if line_idx > 0:
 					line_idx -= 1
 					line = self.data[line_idx]
-					pos = display.term_width
+					pos = self.display.term_width
 					idx = len(line)
 				else:
 					end_flag = True
-
 
 	def next_line(self, move_cnt):
 		next_csr_y = self.cursor_y + move_cnt
 		if next_csr_y < 1:
 			self.vscroll(-1 * (next_csr_y - 1), DIR_REVERSE)
 			self.cursor_y = 1
-		elif (display.term_lines - 1) < next_csr_y:
-			self.vscroll(next_csr_y - (display.term_lines - 1), DIR_FORWARD)
-			self.cursor_y = display.term_lines - 1
+		elif (self.display.term_lines - 1) < next_csr_y:
+			self.vscroll(next_csr_y - (self.display.term_lines - 1), DIR_FORWARD)
+			self.cursor_y = self.display.term_lines - 1
 		else:
 			if ((self.disp_top - 1) + (next_csr_y - 1)) < self.max_line:
 				self.cursor_y = next_csr_y
 			else:
 				self.cursor_y = self.max_line - (self.disp_top - 1)
 
-		# Ÿ‚Ìs‚ÌƒJ[ƒ\ƒ‹ˆÊ’uX‚ğZo
+		# æ¬¡ã®è¡Œã®ã‚«ãƒ¼ã‚½ãƒ«ä½ç½®Xã‚’ç®—å‡º
 		(line, line_idx, char_idx, pos) = self.get_current_param()
 
-		### indexˆÊ’u‚Å‚È‚­AƒJ[ƒ\ƒ‹ˆÊ’u‚Å”äŠr‚·‚é‚æ‚¤‚ÉC³ ###
+		#Todo: indexä½ç½®ã§ãªãã€ã‚«ãƒ¼ã‚½ãƒ«ä½ç½®ã§æ¯”è¼ƒã™ã‚‹ã‚ˆã†ã«ä¿®æ­£
 		pre_idx = -1
 		iter = re.finditer(r"[a-zA-Z0-9_]+", line)
 		for n in iter:
 			idx = n.span()[0]
 			if idx == char_idx:
-				break;
+				break
 			elif char_idx < idx:
 				if (idx - char_idx) > (char_idx - pre_idx):
 					if pre_idx == -1:
@@ -1254,54 +1323,51 @@ class FileCtrl():
 		pos = self.index_to_cursor(line, char_idx)
 		self.cursor_x = pos - (self.disp_left - 1)
 
-		display.move_cursor(self.cursor_x, self.cursor_y)
-
+		self.display.move_cursor(self.cursor_x, self.cursor_y)
 
 	def middle_line(self):
-		last_idx = (self.disp_top - 1) + (display.term_lines - 1)
+		last_idx = (self.disp_top - 1) + (self.display.term_lines - 1)
 		if last_idx < self.max_line:
-			bottom_cursor_y = display.term_lines - 1
+			bottom_cursor_y = self.display.term_lines - 1
 		else:
 			bottom_cursor_y = self.max_line - (self.disp_top - 1)
 
 		file_ctrl.cursor_y = (bottom_cursor_y // 2) + (bottom_cursor_y % 2)
-		display.move_cursor(file_ctrl.cursor_x, file_ctrl.cursor_y)
+		self.display.move_cursor(file_ctrl.cursor_x, file_ctrl.cursor_y)
 		file_ctrl.first_word()
 
-
 	def get_command(self, prompt, file_srch=False, limit=""):
-		display.clear_tail_line()
-		display.move_print(1, display.term_lines, f"{prompt}")
-		history.init_idx()
+		self.display.clear_tail_line()
+		self.display.move_print(1, self.display.term_lines, f"{prompt}")
+		self.history.init_idx()
 		filesrch = FileSearch()
 		def_enc = locale.getpreferredencoding()
-		pre_char = ""	# Š¿š“ü—Í‚Ì1Byte–ÚƒR[ƒh•Û‘¶—p
-		idx = 0			# cmd“à‚ÌƒJ[ƒ\ƒ‹ˆÊ’u
-		shift = 1		# cmd•¶š—ñ‚ª‰æ–Ê‰¡•“à‚Å•\¦‚Å‚«‚È‚¢ê‡‚Ì•\¦ŠJnˆÊ’u
-		offset = 0		# ^G‚Ì•¶šæ‚Ìs“àQÆˆÊ’u
-		cmd = ""		# “ü—Í‚µ‚½ƒRƒ}ƒ“ƒh•¶š—ñ
+		pre_char = ""	# æ¼¢å­—å…¥åŠ›ã®1Byteç›®ã‚³ãƒ¼ãƒ‰ä¿å­˜ç”¨
+		idx = 0			# cmdå†…ã®ã‚«ãƒ¼ã‚½ãƒ«ä½ç½®
+		shift = 1		# cmdæ–‡å­—åˆ—ãŒç”»é¢æ¨ªå¹…å†…ã§è¡¨ç¤ºã§ããªã„å ´åˆã®è¡¨ç¤ºé–‹å§‹ä½ç½®
+		offset = 0		# ^Gã®æ–‡å­—å–è¾¼æ™‚ã®è¡Œå†…å‚ç…§ä½ç½®
+		cmd = ""		# å…¥åŠ›ã—ãŸã‚³ãƒãƒ³ãƒ‰æ–‡å­—åˆ—
 		end_flag = 	False
-		while end_flag == False:
-			#key = ord(getch())
-			key = ord(keyctrl.getkey())
+		while end_flag is False:
+			key = ord(self.keyctrl.getkey())
 			if key == 0x06: # ^F
-				# ƒJ[ƒ\ƒ‹‰EˆÚ“®
+				# ã‚«ãƒ¼ã‚½ãƒ«å³ç§»å‹•
 				idx = (idx + 1) if (idx < len(cmd)) else idx
 			elif key == 0x02: # ^B
-				# ƒJ[ƒ\ƒ‹¶ˆÚ“®
+				# ã‚«ãƒ¼ã‚½ãƒ«å·¦ç§»å‹•
 				idx = (idx - 1) if (idx > 0) else idx
 			elif key == 0x01: # ^A
-				# ƒJ[ƒ\ƒ‹s“ªˆÚ“®
+				# ã‚«ãƒ¼ã‚½ãƒ«è¡Œé ­ç§»å‹•
 				idx = 0
 			elif key == 0x05: # ^E
-				# ƒJ[ƒ\ƒ‹s––ˆÚ“®
+				# ã‚«ãƒ¼ã‚½ãƒ«è¡Œæœ«ç§»å‹•
 				idx = len(cmd)
 			elif key == 0x04: # ^D
-				# ƒJ[ƒ\ƒ‹ˆÊ’u‚Ì1•¶šíœ
+				# ã‚«ãƒ¼ã‚½ãƒ«ä½ç½®ã®1æ–‡å­—å‰Šé™¤
 				if cmd != "":
 					cmd = cmd[:idx] + cmd[idx+1:]
 			elif key == 0x08: # ^H
-				# ƒJ[ƒ\ƒ‹¶‚Ì1•¶šíœ
+				# ã‚«ãƒ¼ã‚½ãƒ«å·¦ã®1æ–‡å­—å‰Šé™¤
 				if cmd != "":
 					cmd = cmd[:idx-1] + cmd[idx:]
 					idx -= 1
@@ -1309,18 +1375,18 @@ class FileCtrl():
 					end_flag = True
 			elif key == 0x09: # ^I
 				if file_srch:
-					pass # ƒtƒ@ƒCƒ‹–¼•âŠ®
+					pass # ãƒ•ã‚¡ã‚¤ãƒ«åè£œå®Œ
 					arg = re.split(r"[ \t]",cmd[:idx])
 					file = filesrch.isearch(arg[-1])
 					ins_idx = idx - self.unicode_len(arg[-1])
 					cmd = cmd[:ins_idx] + file
 					idx = len(cmd)
 				else:
-					if limit == "" or re.match(limit, chr(key)) != None:
+					if limit == "" or re.match(limit, chr(key)) is not None:
 						cmd = cmd[:idx] + chr(key) + cmd[idx:]
 						idx += 1
-			elif key == 0x07 and limit == "": # ^G (•¶š§ŒÀ‚È‚µ‚Ìê‡‚Ì‚İ)
-				# ƒJ[ƒ\ƒ‹ˆÊ’u•¶šæ‚İ
+			elif key == 0x07 and limit == "": # ^G (æ–‡å­—åˆ¶é™ãªã—ã®å ´åˆã®ã¿)
+				# ã‚«ãƒ¼ã‚½ãƒ«ä½ç½®æ–‡å­—å–è¾¼ã¿
 				(line, line_idx, char_idx, pos) = self.get_current_param()
 				start_idx = char_idx + offset
 				expr = r"[a-zA-Z0-9_]+|[^a-zA-Z0-9_]+"
@@ -1333,33 +1399,33 @@ class FileCtrl():
 				cmd = cmd[:idx] + word + cmd[idx:]
 				idx += len(word)
 			elif key == 0x10: # ^P
-				# —š—ğ(1‚Â‘O)
-				cmd = history.get_prev()
+				# å±¥æ­´(1ã¤å‰)
+				cmd = self.history.get_prev()
 				idx = len(cmd)
 			elif key == 0x0e: # ^N
-				# —š—ğ(1‚ÂŒã)
-				cmd = history.get_next()
+				# å±¥æ­´(1ã¤å¾Œ)
+				cmd = self.history.get_next()
 				idx = len(cmd)
 			elif key in (0x0d, 0x0a): # CR, LF
-				# “ü—ÍI—¹
-				history.reg_hist(cmd)
+				# å…¥åŠ›çµ‚äº†
+				self.history.reg_hist(cmd)
 				end_flag = True
 			elif key == 0x1b: # ESC
-				# “ü—ÍƒLƒƒƒ“ƒZƒ‹
+				# å…¥åŠ›ã‚­ãƒ£ãƒ³ã‚»ãƒ«
 				cmd = ""
 				idx = 0
 				end_flag = True
 			else:
 				if pre_char == "":
-					if limit == "" or re.match(limit, chr(key)) != None:
+					if limit == "" or re.match(limit, chr(key)) is not None:
 						if key >= 0x80:
-							pre_char = bytes([key]) # ()“à‚Ì’l‚Í[]‚ÅˆÍ‚Ş
+							pre_char = bytes([key]) # ()å†…ã®å€¤ã¯[]ã§å›²ã‚€
 						elif key >= 0x20 or key == 0x09:
 							cmd = cmd[:idx] + chr(key) + cmd[idx:]
 							idx += 1
 				else:
-					# 2Byte‚ÌŠ¿šƒR[ƒhˆ—
-					pre_char += bytes([key]) # ()“à‚Ì’l‚Í[]‚ÅˆÍ‚Ş
+					# 2Byteã®æ¼¢å­—ã‚³ãƒ¼ãƒ‰å‡¦ç†
+					pre_char += bytes([key]) # ()å†…ã®å€¤ã¯[]ã§å›²ã‚€
 					char = pre_char.decode(def_enc)
 					cmd = cmd[:idx] + char + cmd[idx:]
 					idx += 1
@@ -1367,65 +1433,66 @@ class FileCtrl():
 
 			pos = self.index_to_cursor(cmd, idx)
 			prompt_len = self.unicode_len(prompt)
-			disp_width = display.term_width - prompt_len
+			disp_width = self.display.term_width - prompt_len
 			if idx > 0:
 				char_len = self.unicode_len(cmd[idx-1])
 			else:
 				char_len = 0
 
-			if (shift + display.term_width - char_len) <= (prompt_len + pos):
+			if (shift + self.display.term_width - char_len) \
+					<= (prompt_len + pos):
 				shift += (disp_width // 2)
 			elif pos <= shift:
 				shift -= (disp_width // 2)
 				if shift < 1:
 					shift = 1
 			disp_cmd = self.cut_text(cmd, shift, disp_width , "")
-			display.move_print(1, display.term_lines, f"{prompt}{disp_cmd}")
+			self.display.move_print(
+					1, self.display.term_lines, f"{prompt}{disp_cmd}")
 			csr_x = pos - (shift - 1)
-			display.move_cursor(prompt_len + csr_x, display.term_lines)
+			self.display.move_cursor(prompt_len + csr_x, self.display.term_lines)
 
-		display.clear_tail_line()
+		self.display.clear_tail_line()
 		return cmd
-
 
 	def scroll_caret(self, line_idx, char_idx):
 		stat = 0
-		# Y•ûŒü‚Ì•\¦’²®
-		if (self.disp_top + display.vscroll) <= (line_idx + 1):
+		# Yæ–¹å‘ã®è¡¨ç¤ºèª¿æ•´
+		if (self.disp_top + self.display.vscroll) <= (line_idx + 1):
 			dir = DIR_FORWARD
-			cnt = (line_idx + 1) - (self.disp_top + display.vscroll) + 1
-			if cnt <= (SCROLL_PAGE * display.vscroll):
+			cnt = (line_idx + 1) - (self.disp_top + self.display.vscroll) + 1
+			if cnt <= (SCROLL_PAGE * self.display.vscroll):
 				self.vscroll(cnt, dir)
-				self.cursor_y = display.vscroll
+				self.cursor_y = self.display.vscroll
 			else:
-				self.cursor_y = int(display.vscroll / 2)
+				self.cursor_y = int(self.display.vscroll / 2)
 				self.disp_top = (line_idx + 1) - self.cursor_y + 1
 			stat = dir
 		elif (line_idx + 1) < self.disp_top:
 			dir = DIR_REVERSE
 			cnt = self.disp_top - (line_idx + 1)
-			if cnt <= (SCROLL_PAGE * display.vscroll):
+			if cnt <= (SCROLL_PAGE * self.display.vscroll):
 				self.vscroll(cnt, dir)
 				self.cursor_y = 1
 			else:
-				self.cursor_y = int(display.vscroll / 2)
+				self.cursor_y = int(self.display.vscroll / 2)
 				self.disp_top = (line_idx + 1) - self.cursor_y + 1
 			stat = dir
 		else:
 			self.cursor_y = (line_idx + 1) - self.disp_top + 1
 
-		# X•ûŒü‚Ì•\¦’²®
+		# Xæ–¹å‘ã®è¡¨ç¤ºèª¿æ•´
 		cnt = 0
 		line = self.data[line_idx]
 		pos = self.index_to_cursor(line, char_idx)
-		if (self.disp_left + display.term_width) <= pos:
-			cnt = pos - (self.disp_left + display.term_width) + 1
-			cnt = math.ceil(cnt / display.hscroll) * display.hscroll
+		if (self.disp_left + self.display.term_width) <= pos:
+			cnt = pos - (self.disp_left + self.display.term_width) + 1
+			cnt = math.ceil(cnt / self.display.hscroll) * self.display.hscroll
 			self.hscroll(DIR_FORWARD, cnt)
 			stat = 10 * stat + DIR_FORWARD
 		elif pos < self.disp_left:
 			cnt = self.disp_left - pos
-			cnt = math.ceil(cnt / display.hscroll) * display.hscroll
+			cnt = math.ceil(cnt / self.display.hscroll) * self.display.hscroll
 			self.hscroll(DIR_REVERSE, cnt)
 			stat = 10 * stat + DIR_REVERSE
 		self.cursor_x = pos - (self.disp_left - 1)
@@ -1433,42 +1500,40 @@ class FileCtrl():
 		return stat
 
 	def srch_word(self, dir, count, input):
-		global display
-
-		# ŒŸõ•¶š—ñ‚Ì“ü—Í
-		if input == True:
+		# æ¤œç´¢æ–‡å­—åˆ—ã®å…¥åŠ›
+		if input is True:
 			prompt = "/" if (dir == DIR_FORWARD) else "?"
 			srch_key = self.get_command(prompt)
 			if srch_key != "":
-				display.srch_str = srch_key
-				display.srch_dir = dir
+				self.display.srch_str = srch_key
+				self.display.srch_dir = dir
 			else:
-				display.srch_str = ""
+				self.display.srch_str = ""
 				self.disp_line()
 				return ""
 		else:
-			if display.srch_dir == DIR_REVERSE:
+			if self.display.srch_dir == DIR_REVERSE:
 				dir = DIR_REVERSE if (dir == DIR_FORWARD) else DIR_FORWARD 
 
-		if display.srch_str == "":
+		if self.display.srch_str == "":
 			return "No search word"
 
-		# •¶š—ñ‚ÌŒŸõ
+		# æ–‡å­—åˆ—ã®æ¤œç´¢
 		self.set_mark("@")
 		msg = ""
 		end_flag = False
 		(line, line_idx, char_idx, pos) = self.get_current_param()
 		if dir == DIR_FORWARD:
 			start_idx = char_idx + 1
-			while end_flag == False:
+			while end_flag is False:
 				try:
-					stat = re.search(display.srch_str, line[start_idx:])
-				except:
-					display.srch_str = ""
+					stat = re.search(self.display.srch_str, line[start_idx:])
+				except Exception:
+					self.display.srch_str = ""
 					msg = "No match"
 					break
 
-				if stat != None:
+				if stat is not None:
 					idx = stat.span()[0] + start_idx
 					stat = self.scroll_caret(line_idx, idx)
 					if stat or input:
@@ -1487,12 +1552,12 @@ class FileCtrl():
 						end_flag = True
 		else:
 			end_idx = char_idx
-			while end_flag == False:
+			while end_flag is False:
 				idx = -1
 				try:
-					iter = re.finditer(display.srch_str, line[:end_idx])
-				except:
-					display.srch_str = ""
+					iter = re.finditer(self.display.srch_str, line[:end_idx])
+				except Exception:
+					self.display.srch_str = ""
 					msg = "No match"
 					break
 
@@ -1516,17 +1581,16 @@ class FileCtrl():
 						msg = "No match"
 						end_flag = True
 
-		# ŒŸõ•ûŒü‚Éˆê’v‚ª–³‚­‚Ä‚àA“¯ˆê‰æ–Ê‚Ì‹t•ûŒü‚Ìˆê’v•¶š‚ğ‹­’²•\¦
+		# æ¤œç´¢æ–¹å‘ã«ä¸€è‡´ãŒç„¡ãã¦ã‚‚ã€åŒä¸€ç”»é¢ã®é€†æ–¹å‘ã®ä¸€è‡´æ–‡å­—ã‚’å¼·èª¿è¡¨ç¤º
 		if msg == "No match":
 			self.disp_line()
 
 		return msg
 
-
 	def get_current_word(self):
 		(line, line_idx, idx, pos) = self.get_current_param()
 		stat = re.match(r"[a-zA-Z0-9_]+", line[idx:])
-		if stat != None:
+		if stat is not None:
 			start = idx + stat.span()[0]
 			end   = idx + stat.span()[1]
 			word = line[start:end]
@@ -1535,17 +1599,16 @@ class FileCtrl():
 
 		return word
 
-
 	def tag_jump(self, select_f=False):
-		# ƒL[ƒ[ƒh‚Ìæ“¾
+		# ã‚­ãƒ¼ãƒ¯ãƒ¼ãƒ‰ã®å–å¾—
 		keyword = self.get_current_word()
 
-		# ƒ^ƒOî•ñƒe[ƒuƒ‹‚ÌŒŸõ
-		tag_list = taginfo.srch_keyword(keyword)
+		# ã‚¿ã‚°æƒ…å ±ãƒ†ãƒ¼ãƒ–ãƒ«ã®æ¤œç´¢
+		tag_list = self.taginfo.srch_keyword(keyword)
 		if len(tag_list) == 0:
 			return "E:No such tag"
 
-		# ƒ^ƒOî•ñ‚Ì‘I‘ğ
+		# ã‚¿ã‚°æƒ…å ±ã®é¸æŠ
 		if select_f and len(tag_list) > 1:
 			tag_info = self.select_list(tag_list)
 			file = tag_info[1]
@@ -1557,13 +1620,17 @@ class FileCtrl():
 			file = tag_list[0][1]
 			srch = tag_list[0][2]
 
-		# ƒWƒƒƒ“ƒvæƒtƒ@ƒCƒ‹“Ç‚İ
-		if Path(file).exists() == False:
+		# ã‚¸ãƒ£ãƒ³ãƒ—å…ˆãƒ•ã‚¡ã‚¤ãƒ«èª­è¾¼ã¿
+		if Path(file).exists() is False:
 			return f"E:No such file({file})"
-		new_ctrl = FileCtrl()
+		new_ctrl = FileCtrl(self.display)
 		new_ctrl.set_file(file)
 
-		# ƒWƒƒƒ“ƒvæƒtƒ@ƒCƒ‹“à‚ÌŒŸõ
+		# è¡Œæ¤œç´¢æ–‡å­—ã®å…ˆé ­ã«è¡Œç•ªå·ãŒã‚ã‚‹å ´åˆã€è¡Œç•ªå·ã¸å¤‰æ›
+		if re.match(r"^[0-9]+: ", srch):
+			srch = re.sub(r": .*", "", srch)
+
+		# ã‚¸ãƒ£ãƒ³ãƒ—å…ˆãƒ•ã‚¡ã‚¤ãƒ«å†…ã®æ¤œç´¢
 		if srch.isnumeric():
 			line_idx = int(srch)
 			if line_idx <= new_ctrl.max_line:
@@ -1579,38 +1646,37 @@ class FileCtrl():
 			else:
 				return f"E:No such line({srch})"
 
-		display.tag_file[display.read_index - 1].append(new_ctrl)
+		self.display.tag_file[self.display.read_index - 1].append(new_ctrl)
 		new_ctrl.tag_key = keyword
 
 		count = len(tag_list)
-		if count > 1 and select_f == False:
+		if count > 1 and select_f is False:
 			return f"I:Exist {count} tags"
 		else:
 			return ""
 
-
 	def select_list(self, tag_list):
 		disp_data = []
 
-		# •\¦ƒGƒŠƒA‚ÌZo
+		# è¡¨ç¤ºã‚¨ãƒªã‚¢ã®ç®—å‡º
 		list_max = len(tag_list)
 		minus_idx = 2 * list_max + 2
-		if minus_idx < display.term_lines:
+		if minus_idx < self.display.term_lines:
 			self.disp_fname(minus_idx)
 		else:
-			minus_idx = display.term_lines
+			minus_idx = self.display.term_lines
 			if minus_idx % 2 == 1:
 				disp_data.append("")
 
-		# •\¦—pƒ^ƒOî•ñ‚Ì•Û‘¶
+		# è¡¨ç¤ºç”¨ã‚¿ã‚°æƒ…å ±ã®ä¿å­˜
 		(tag, file, srch) = tag_list[0]
-		tag_width = display.term_width - 8
+		tag_width = self.display.term_width - 8
 		tag_txt = self.cut_text(tag, 1, tag_width, "")
 		title = f"{ESC_CYAN}No. tag={ESC_INIT}{tag_txt}"
 		disp_data.append(title)
 
-		file_width = display.term_width - 4	# "No. "‚Ì•‚ğŒ¸Z
-		srch_width = display.term_width - 6 # æ“ªƒCƒ“ƒfƒ“ƒg•‚ğŒ¸Z
+		file_width = self.display.term_width - 4 # "No. "ã®å¹…ã‚’æ¸›ç®—
+		srch_width = self.display.term_width - 6 # å…ˆé ­ã‚¤ãƒ³ãƒ‡ãƒ³ãƒˆå¹…ã‚’æ¸›ç®—
 		for i, tag_info in enumerate(tag_list):
 			(tag, file, srch) = tag_info
 			file_txt = self.reduce_text(file, file_width)
@@ -1618,18 +1684,17 @@ class FileCtrl():
 			disp_data.append(f"{i+1:3d} {file_txt}")
 			disp_data.append(f"      {srch_txt}")
 
-		# •\¦—pƒ^ƒOî•ñ‚ÌMore•\¦
+		# è¡¨ç¤ºç”¨ã‚¿ã‚°æƒ…å ±ã®Moreè¡¨ç¤º
 		self.disp_more(disp_data, minus_idx)
 
-		# ƒ^ƒOî•ñ‚Ì‘I‘ğ
+		# ã‚¿ã‚°æƒ…å ±ã®é¸æŠ
 		tag_info = ["", "", ""]
-		cmd = self.get_command("”Ô†‚ğ‘I‘ğ‚µ‚Ä‚­‚¾‚³‚¢: ", limit="[0-9]")
+		cmd = self.get_command("ç•ªå·ã‚’é¸æŠã—ã¦ãã ã•ã„: ", limit="[0-9]")
 		if re.match(r"[0-9]+", cmd):
 			idx = int(cmd)
 			if idx > 0 and idx <= len(tag_list):
 				tag_info = tag_list[idx - 1]
 		return tag_info
-
 
 	def reduce_text(self, text, width):
 		txt_len = self.unicode_len(text)
@@ -1645,9 +1710,8 @@ class FileCtrl():
 
 		return reduce_txt
 
-
 	def disp_more(self, data, lines):
-		tail_row = display.term_lines
+		tail_row = self.display.term_lines
 		idx = 0
 		data_max = len(data)
 		disp_rate = 0
@@ -1661,23 +1725,23 @@ class FileCtrl():
 
 				if data_max <= idx:
 					break
-				display.move_print(1, row, data[idx] + "\n")
+				self.display.move_print(1, row, data[idx] + "\n")
 				idx += 1
 
 			disp_rate = ((100 * idx) // data_max)
 			if disp_rate < 100:
-				display.move_print(1, tail_row, f"-- More ({disp_rate}%) --")
+				self.display.move_print(
+						1, tail_row, f"-- More ({disp_rate}%) --")
 				key = ord(getch())
 				if key == 0x1b:
 					break
 
-
 	def srch_brace(self):
 		"""
-		‘Î‰‚·‚éŠ‡ŒÊ((), {}, [])‚ğ’T‚·
+		å¯¾å¿œã™ã‚‹æ‹¬å¼§((), {}, [])ã‚’æ¢ã™
 		"""
 		match_cnt = 0
-		add_idx = 1		# ‘Î‰‚·‚éŠ‡ŒÊ‚ğŒŸõ‚·‚é•ûŒü
+		add_idx = 1		# å¯¾å¿œã™ã‚‹æ‹¬å¼§ã‚’æ¤œç´¢ã™ã‚‹æ–¹å‘
 		(line, line_idx, idx, pos) = self.get_current_param()
 		if self.coating[line_idx] != "":
 			return
@@ -1692,13 +1756,11 @@ class FileCtrl():
 		else:
 			return
 
-		ptn = "[(){}\[\]]|\".*\"|'.*'"
+		ptn = "[(){}\[\]]|\"(.*?)(?<!\\\\)\"|\'(.*?)(?<!\\\\)\""
 		if comment_ptn != "":
 			ptn = ptn + "|" + comment_ptn 
-		skip_flag = False
-		next_flag = False
 		end_flag = False
-		while end_flag == False:
+		while end_flag is False:
 			srch_char = ""
 			if self.coating[line_idx] != "":
 				idx = -1
@@ -1706,32 +1768,32 @@ class FileCtrl():
 				(prev_idx, next_idx) = self.get_word_index(line, idx, ptn)
 				idx = -1
 				if add_idx > 0:
-					# Ÿ‚ÌŒŸõ•¶š‚ ‚è
+					# æ¬¡ã®æ¤œç´¢æ–‡å­—ã‚ã‚Š
 					if next_idx >= 0:
 						srch_char = line[next_idx]
 						idx = next_idx
 				else:
-					# ‘O‚ÌŒŸõ•¶š‚ ‚è
+					# å‰ã®æ¤œç´¢æ–‡å­—ã‚ã‚Š
 					if prev_idx >= 0:
 						srch_char = line[prev_idx]
 						idx = prev_idx
 
 			if idx != -1:
-				# Ÿ/‘O‚ÌŒŸõ•¶š‚ ‚è
+				# æ¬¡/å‰ã®æ¤œç´¢æ–‡å­—ã‚ã‚Š
 				if srch_char in ("(", "{", "["):
 					match_cnt += 1
 				elif srch_char in (")", "}", "]"):
 					match_cnt -= 1
 
-				# ‘Î‰‚·‚éŠ‡ŒÊ”­Œ©
+				# å¯¾å¿œã™ã‚‹æ‹¬å¼§ç™ºè¦‹
 				if match_cnt == 0:
 					self.scroll_caret(line_idx, idx)
 					end_flag = True
 			else:
-				# Ÿ/‘O‚ÌŒŸõ•¶š‚È‚µ
+				# æ¬¡/å‰ã®æ¤œç´¢æ–‡å­—ãªã—
 				line_idx += add_idx
 				if line_idx >=0 and line_idx < (self.max_line):
-					# Ÿ/‘O‚Ìs‚ğŒŸõ
+					# æ¬¡/å‰ã®è¡Œã‚’æ¤œç´¢
 					line = self.data[line_idx]
 					if add_idx > 0:
 						idx = -1
@@ -1740,21 +1802,19 @@ class FileCtrl():
 				else:
 					end_flag = True
 
-
 	def add_tagfile(self):
-		# ƒ^ƒOƒtƒ@ƒCƒ‹–¼‚Ì“ü—Í
+		# ã‚¿ã‚°ãƒ•ã‚¡ã‚¤ãƒ«åã®å…¥åŠ›
 		file = self.get_command("Add TagFile: ", True)
-		if Path(file).exists() == False:
+		if Path(file).exists() is False:
 			return "No such file"
 
 		if file != "":
-			# ƒ^ƒOî•ñƒe[ƒuƒ‹‚Ìì¬
-			taginfo.read_file(file)
+			# ã‚¿ã‚°æƒ…å ±ãƒ†ãƒ¼ãƒ–ãƒ«ã®ä½œæˆ
+			self.taginfo.read_file(file)
 
 			return "Add tag info"
 		else:
 			return ""
-
 
 	def count_lines(self, text, width):
 		lines = 1
@@ -1769,28 +1829,27 @@ class FileCtrl():
 
 		return lines
 
-
 	def disp_fname(self, minus=0, full=False):
-		if (len(display.tag_file[display.read_index - 1]) > 0):
-			tag_cnt = len(display.tag_file[display.read_index - 1])
+		if (len(self.display.tag_file[self.display.read_index - 1]) > 0):
+			tag_cnt = len(self.display.tag_file[self.display.read_index - 1])
 			tag_idx = f" <{self.tag_key}({tag_cnt})>  "
 		else:
 			tag_idx = ""
-		file_idx = f"({display.read_index} of {display.read_count})"
+		file_idx = f"({self.display.read_index} of {self.display.read_count})"
 
 		pos_y = self.disp_top + self.cursor_y - 1
 		pos_x = self.disp_left + self.cursor_x - 1
 
-		if full == True:
+		if full is True:
 			file_str = self.read_file
-			minus = self.count_lines(file_str, display.term_width) - 1
+			minus = self.count_lines(file_str, self.display.term_width) - 1
 			cursor = f"  line {pos_y}/{self.max_line}, column {pos_x}"
 			disp_str = file_str + tag_idx + file_idx + cursor
-			display.disp_message(disp_str, minus)
+			self.display.disp_message(disp_str, minus)
 		else:
 			cursor = f"  [{pos_y},{pos_x}]"
 			idx_len = len(tag_idx + file_idx + cursor)
-			file_width = (display.term_width - 1) - idx_len
+			file_width = (self.display.term_width - 1) - idx_len
 			file_str = self.read_file
 			file_len = self.unicode_len(file_str)
 			diff_len = file_width - file_len
@@ -1803,41 +1862,54 @@ class FileCtrl():
 			file_str = self.cut_text(file_str, file_start, file_width, "")
 
 			disp_str = file_str + tag_idx + file_idx + adjust_space + cursor
-			display.disp_message(disp_str, minus)
+			self.display.disp_message(disp_str, minus)
+
+	def chng_syntax(self):
+		guide = "change syntax(p:python, c:C++, C:C, a:awk, j:java, n:): "
+		self.display.move_print(1, self.display.term_lines, guide)
+		char = chr(ord(getch()))
+
+		key_ext = {
+				"p": ".py", "c": ".cpp", "C": ".c",
+				"a": ".awk", "j": ".java", "n": "null"}
+		if char in key_ext:
+			ext = key_ext[char]
+		else:
+			ext = ""
+
+		return ext
 
 
 class HistoryCtrl():
 	"""
-	ƒRƒ}ƒ“ƒh—š—ğ§Œä
+	ã‚³ãƒãƒ³ãƒ‰å±¥æ­´åˆ¶å¾¡
 
 	Attributes:
-		max_cnt     : —š—ğ‚Ì“o˜^Å‘å”
-		hist_idx    : QÆ‚·‚é—š—ğˆÊ’u(-1, 0, ..., max_cnt-1, max_cnt)
-		hist_list[] : —š—ğƒŠƒXƒg
+		max_cnt     : å±¥æ­´ã®ç™»éŒ²æœ€å¤§æ•°
+		hist_idx    : å‚ç…§ã™ã‚‹å±¥æ­´ä½ç½®(-1, 0, ..., max_cnt-1, max_cnt)
+		hist_list[] : å±¥æ­´ãƒªã‚¹ãƒˆ
 	"""
+
 	def __init__(self, max_cnt=MAX_HISTORY):
 		self.max_cnt = max_cnt
 		self.hist_idx = 0
 		self.hist_list = []
 
-
 	def reg_hist(self, text):
-		# “ü—Í•¶š‚Æ“¯ˆê•¶š‚ğƒŠƒXƒg‚©‚çíœ
+		# å…¥åŠ›æ–‡å­—ã¨åŒä¸€æ–‡å­—ã‚’ãƒªã‚¹ãƒˆã‹ã‚‰å‰Šé™¤
 		if text in self.hist_list:
 			self.hist_list.remove(text)
 
-		# —š—ğ‚ÌÅ‘å”ˆÈã‚Ìê‡Aˆê”ÔŒÃ‚¢—š—ğ‚ğƒŠƒXƒg‚©‚çíœ
+		# å±¥æ­´ã®æœ€å¤§æ•°ä»¥ä¸Šã®å ´åˆã€ä¸€ç•ªå¤ã„å±¥æ­´ã‚’ãƒªã‚¹ãƒˆã‹ã‚‰å‰Šé™¤
 		if self.max_cnt <= len(self.hist_list):
 			del self.hist_list[0]
 
-		# ÅV‚Ì—š—ğ‚ğƒŠƒXƒg‚ÌÅŒã‚É’Ç‰Á
+		# æœ€æ–°ã®å±¥æ­´ã‚’ãƒªã‚¹ãƒˆã®æœ€å¾Œã«è¿½åŠ 
 		self.hist_list.append(text)
 		self.hist_idx = len(self.hist_list)
 
-
 	def init_idx(self):
 		self.hist_idx = len(self.hist_list)
-
 
 	def get_next(self):
 		hist = ""
@@ -1848,7 +1920,6 @@ class HistoryCtrl():
 			hist = self.hist_list[self.hist_idx]
 
 		return hist
-
 
 	def get_prev(self):
 		hist = ""
@@ -1863,98 +1934,98 @@ class HistoryCtrl():
 
 class TagInfo():
 	"""
-	ƒ^ƒOƒWƒƒƒ“ƒv‚ÉŠÖ‚·‚éî•ñ
+	ã‚¿ã‚°ã‚¸ãƒ£ãƒ³ãƒ—ã«é–¢ã™ã‚‹æƒ…å ±
 
 	Attributes:
-		tag_table[] : ƒ^ƒOî•ñ(ƒL[ƒ[ƒhAƒtƒ@ƒCƒ‹–¼AsŒŸõ•¶š—ñ)‚ÌƒŠƒXƒg
-		input_file  : ƒ^ƒOƒtƒ@ƒCƒ‹‚©‚ç‚Ì“Ç‚İ—L–³(True/False)
+		tag_table[] : ã‚¿ã‚°æƒ…å ±(ã‚­ãƒ¼ãƒ¯ãƒ¼ãƒ‰ã€ãƒ•ã‚¡ã‚¤ãƒ«åã€è¡Œæ¤œç´¢æ–‡å­—åˆ—)ã®ãƒªã‚¹ãƒˆ
+		input_file  : ã‚¿ã‚°ãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰ã®èª­è¾¼ã¿æœ‰ç„¡(True/False)
+		add_num     : ã‚¿ã‚°æƒ…å ±.è¡Œæ¤œç´¢æ–‡å­—ã«è¡Œç•ªå·ä»˜ä¸ã®æœ‰ç„¡(True/False)
 	"""
+
 	def __init__(self):
 		self.tag_table = []
 		self.input_file = False
-
+		self.add_num = False
 
 	def read_file(self, tag_file):
 		"""
-		ƒ^ƒOƒtƒ@ƒCƒ‹‚ğ“Ç‚İAƒ^ƒOî•ñƒe[ƒuƒ‹‚Ö“o˜^
+		ã‚¿ã‚°ãƒ•ã‚¡ã‚¤ãƒ«ã‚’èª­è¾¼ã¿ã€ã‚¿ã‚°æƒ…å ±ãƒ†ãƒ¼ãƒ–ãƒ«ã¸ç™»éŒ²
 			Args:
-				tag_file (str): ƒ^ƒOƒtƒ@ƒCƒ‹–¼
+				tag_file (str): ã‚¿ã‚°ãƒ•ã‚¡ã‚¤ãƒ«å
 
 			Returns:
-				‚È‚µ
+				ãªã—
 		"""
-		# ƒ^ƒOƒtƒ@ƒCƒ‹–¼‚Ìƒ`ƒFƒbƒN
+		# ã‚¿ã‚°ãƒ•ã‚¡ã‚¤ãƒ«åã®ãƒã‚§ãƒƒã‚¯
 		if tag_file != "":
 			file = tag_file
 		else:
 			file = TAG_FILE
 
-		if Path(file).exists() == False:
+		if Path(file).exists() is False:
 			return
 
-		# ƒ^ƒOƒtƒ@ƒCƒ‹“Ç‚İ
+		# ã‚¿ã‚°ãƒ•ã‚¡ã‚¤ãƒ«èª­è¾¼ã¿
 		with open(file, "rb") as f:
 			txt = f.read()
 		guess = chardet.detect(txt).get("encoding")
-		if guess is None:
+		if guess not in USABLE_CODE:
 			guess = locale.getpreferredencoding()
 		data = txt.decode(guess).splitlines()
 
-		# ƒ^ƒOî•ñƒe[ƒuƒ‹‚Ì“o˜^
+		# ã‚¿ã‚°æƒ…å ±ãƒ†ãƒ¼ãƒ–ãƒ«ã®ç™»éŒ²
 		for line in data:
 			tag_info = line.split(maxsplit=2)
 			if len(tag_info) == 3:
-				if re.match(r"^/\^.*\$/$", tag_info[2]) != None:
+				if re.match(r"^/\^.*\$/$", tag_info[2]) is not None:
 					tag_info[2] = re.sub(r"^/\^|\$/$", "", tag_info[2])
 				self.tag_table.append(tag_info)
 		self.input_file = True
 
-
 	def analyze_file(self, file, lines):
 		"""
-		ƒ\[ƒX‚ğ‰ğÍ‚µ‚ÄAƒ^ƒOî•ñƒe[ƒuƒ‹‚Ö“o˜^
+		ã‚½ãƒ¼ã‚¹ã‚’è§£æã—ã¦ã€ã‚¿ã‚°æƒ…å ±ãƒ†ãƒ¼ãƒ–ãƒ«ã¸ç™»éŒ²
 			Args:
-				file (str): ƒtƒ@ƒCƒ‹–¼
-				lines (list): ƒ\[ƒXƒR[ƒh
+				file (str): ãƒ•ã‚¡ã‚¤ãƒ«å
+				lines (list): ã‚½ãƒ¼ã‚¹ã‚³ãƒ¼ãƒ‰
 
 			Returns:
-				‚È‚µ
+				ãªã—
 		"""
-		# ƒ^ƒOƒtƒ@ƒCƒ‹‚©‚ç‚Ì“Ç‚İ‚µ‚Ä‚¢‚éê‡A‰ğÍ‚µ‚È‚¢
-		if self.input_file == True:
+		# ã‚¿ã‚°ãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰ã®èª­è¾¼ã¿ã—ã¦ã„ã‚‹å ´åˆã€è§£æã—ãªã„
+		if self.input_file is True:
 			return
 
-		# ƒtƒ@ƒCƒ‹Šg’£q‚É‚æ‚è•ªŠò
+		# ãƒ•ã‚¡ã‚¤ãƒ«æ‹¡å¼µå­ã«ã‚ˆã‚Šåˆ†å²
 		ext = os.path.splitext(file)[-1]
 		if ext == ".py":
-			# python‚Ì‰ğÍ
-			pre_indent = 0
+			# pythonã®è§£æ
 			indent = 0
-			for text in lines:
+			for i, text in enumerate(lines):
 				m = re.match(r"[ \t]+", text)
-				if m != None:
+				if m is not None:
 					indent = m.span()[1]
 				elif text != "":
 					indent = 0
 
-				words = re.findall(r"[a-zA-Z0-9_]+|[()=]+", text)
+				words = re.findall(r"[a-zA-Z0-9_]+|[()=:]+", text)
 				if len(words) > 2:
 					if words[0] == "class" or words[0] == "def":
+						if self.add_num:
+							text = f"{i+1}: " + text
 						list = [words[1], file, text]
 						self.tag_table.append(list)
 					elif words[1] == "=" and indent == 0:
 						list = [words[0], file, text]
 						self.tag_table.append(list)
-
-				pre_indent = indent
-		elif ext in (".c", ".cpp", ".h"):
-			# C/C++‚Ì‰ğÍ
+		elif ext in (".c", ".cpp", ".h", ".java"):
+			# C/C++ã®è§£æ
 			ctags = Ctags()
-			tag_info = ctags.analyze(file, lines)
+			tag_info = ctags.analyze_c(file, lines)
 			for list in tag_info:
 				self.tag_table.append(list)
 		elif ext == ".awk":
-			# awk‚Ì‰ğÍ
+			# awkã®è§£æ
 			for text in lines:
 				words = re.findall(r"function|[a-zA-Z0-9_]+", text)
 				if len(words) > 1:
@@ -1962,15 +2033,14 @@ class TagInfo():
 						list = [words[1], file, text]
 						self.tag_table.append(list)
 
-
 	def srch_keyword(self, keyword):
 		"""
-		ƒ^ƒOî•ñƒe[ƒuƒ‹‚ÌŒŸõ
+		ã‚¿ã‚°æƒ…å ±ãƒ†ãƒ¼ãƒ–ãƒ«ã®æ¤œç´¢
 			Args:
-				keyword (str): ŒŸõ‚·‚éƒL[ƒ[ƒh
+				keyword (str): æ¤œç´¢ã™ã‚‹ã‚­ãƒ¼ãƒ¯ãƒ¼ãƒ‰
 
 			Returns:
-				list: ŒŸõŒ‹‰Ê[[ƒ^ƒO, ƒtƒ@ƒCƒ‹–¼, sŒŸõ•¶š—ñ]]
+				list: æ¤œç´¢çµæœ[[ã‚¿ã‚°, ãƒ•ã‚¡ã‚¤ãƒ«å, è¡Œæ¤œç´¢æ–‡å­—åˆ—]]
 		"""
 		tag_list = []
 		for record in self.tag_table:
@@ -1979,31 +2049,35 @@ class TagInfo():
 
 		return tag_list
 
+	def set_add_num(self):
+		self.add_num = True
+
 
 class Ctags():
 	"""
-	C/C++‚Ìƒ^ƒOî•ñ‚ğ¶¬
+	C/C++ã®ã‚¿ã‚°æƒ…å ±ã‚’ç”Ÿæˆ
 
 	Attributes:
 	"""
+
 	def __init__(self):
 		self.file = ""
 		self.pre_word = ""
 		self.cur_text = ""
 		self.save_text = ""
-		self.paren   = 0	# ()‚ÌƒlƒXƒg”
-		self.brace   = 0	# {}‚ÌƒlƒXƒg”
-		self.bracket = 0	# []‚ÌƒlƒXƒg”
-		self.comment = 0	# /* */‚ÌŠJn(1)AI—¹(0)
-		self.div_f   = False# ’¼ŒãƒL[‚Ì";"ƒ`ƒFƒbƒN
-		self.head_f  = False# ’¼ŒãƒL[‚Åƒ^ƒOî•ño—Í
-		self.tail_n  = 0	# ˆÈ~‚Ì"};"‚Åƒ^ƒOî•ño—Í
-		self.class_n = 0	# class’è‹`(0:’è‹`ŠOAbrace+1:’è‹`“à)
-		self.tag_info = []	# ¶¬‚µ‚½ƒ^ƒOî•ñ[[ƒ^ƒO, ƒtƒ@ƒCƒ‹–¼, sŒŸõ•¶š—ñ]]
+		self.paren   = 0	# ()ã®ãƒã‚¹ãƒˆæ•°
+		self.brace   = 0	# {}ã®ãƒã‚¹ãƒˆæ•°
+		self.bracket = 0	# []ã®ãƒã‚¹ãƒˆæ•°
+		self.comment = 0	# /* */ã®é–‹å§‹(1)ã€çµ‚äº†(0)
+		self.div_f   = False# ç›´å¾Œã‚­ãƒ¼ã®";"ãƒã‚§ãƒƒã‚¯
+		self.head_f  = False# ç›´å¾Œã‚­ãƒ¼ã§ã‚¿ã‚°æƒ…å ±å‡ºåŠ›
+		self.tail_n  = 0	# ä»¥é™ã®"};"ã§ã‚¿ã‚°æƒ…å ±å‡ºåŠ›
+		self.class_n = 0	# classå®šç¾©(0:å®šç¾©å¤–ã€brace+1:å®šç¾©å†…)
+		self.tag_info = []	# ç”Ÿæˆã—ãŸã‚¿ã‚°æƒ…å ±[[ã‚¿ã‚°, ãƒ•ã‚¡ã‚¤ãƒ«å, è¡Œæ¤œç´¢æ–‡å­—åˆ—]]
 
-	def analyze(self, file, lines):
+	def analyze_c(self, file, lines):
 		self.file = file
-		expr = "[a-zA-Z0-9_]+|[()\\[\\]{};]"
+		expr = "[a-zA-Z0-9_.]+|[()\\[\\]{}=;]"
 		expr += "|//|/\\*|\\*/"
 		expr += "|#define|enum|class"
 		expr += "|\".*\"|\'.*\'"
@@ -2013,14 +2087,21 @@ class Ctags():
 			words = re.findall(expr, text)
 			self.srch_key(words)
 
-		return self.tag_info
+		# --- debug ---
+		#for tag in self.tag_info:
+		#	debug_print.append(tag)
 
+		return self.tag_info
 
 	def srch_key(self, words):
 		pre_key = ""
+		pre_word = ""
+		top_modify_f = False
 
 		for idx, key in enumerate(words):
 			if self.comment == 0:
+				#--- debug ---
+				#debug_print.append(f"div_f={self.div_f}, key={key}, pre_word={self.pre_word}, brace={self.brace}, class_n={self.class_n}")
 				if self.div_f and key != ";" and self.brace == self.class_n:
 					list = [self.pre_word, self.file, self.save_text]
 					self.tag_info.append(list)
@@ -2058,14 +2139,21 @@ class Ctags():
 
 					if self.class_n > 0 and self.brace == (self.class_n - 1):
 						self.class_n = 0
-
-				elif key in ("#define", "enum", "class") and idx == 0:
+				elif key == "=" and (self.brace == 0 or top_modify_f):
+					list = [pre_word, self.file, self.cur_text]
+					self.tag_info.append(list)
+				elif key in ("public", "private", "protected") and idx == 0:
+					top_modify_f = True
+				elif key == "class" and (top_modify_f or idx == 0):
 					self.head_f = True
-					if key == "class":
-						#self.clas_f = 1
-						self.class_n = self.brace + 1
+					self.class_n = self.brace + 1
+				elif key in ("#define", "enum") and idx == 0:
+					self.head_f = True
 				elif key == "typedef" and idx == 0:
 					self.tail_n = self.brace + 1
+				else:
+					if self.bracket == 0:
+						pre_word = key
 			else:
 				if key == "*/":
 					self.comment = 0
@@ -2075,19 +2163,17 @@ class Ctags():
 
 class FileSearch():
 	"""
-	ƒtƒ@ƒCƒ‹–¼•âŠ®ˆ—
+	ãƒ•ã‚¡ã‚¤ãƒ«åè£œå®Œå‡¦ç†
 	Attributes:
-		list[]    : æ“¾‚µ‚½ƒtƒ@ƒCƒ‹–¼Œó•â
+		list[]    : å–å¾—ã—ãŸãƒ•ã‚¡ã‚¤ãƒ«åå€™è£œ
 	"""
-
 
 	def __init__(self):
 		self.list = []
 
-
 	def isearch(self, srch):
 		"""
-		ƒtƒ@ƒCƒ‹–¼‚ÌƒCƒ“ƒNƒŠƒƒ“ƒgŒŸõ
+		ãƒ•ã‚¡ã‚¤ãƒ«åã®ã‚¤ãƒ³ã‚¯ãƒªãƒ¡ãƒ³ãƒˆæ¤œç´¢
 		"""
 		next_file = ""
 
@@ -2114,65 +2200,90 @@ class FileSearch():
 
 
 #=== common function ============================================================
-def enable():
-	"""
-	ƒRƒ}ƒ“ƒhƒvƒƒ“ƒvƒg‚ÌESCƒV[ƒPƒ“ƒX—LŒø‰»
-	"""
-	INVALID_HANDLE_VALUE = -1
-	STD_INPUT_HANDLE  = -10
-	STD_OUTPUT_HANDLE = -11
-	STD_ERROR_HANDLE  = -12
-	ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004
-	ENABLE_LVB_GRID_WORLDWIDE = 0x0010
+if os.name == "nt":
+	def enable():
+		"""
+		ã‚³ãƒãƒ³ãƒ‰ãƒ—ãƒ­ãƒ³ãƒ—ãƒˆã®ESCã‚·ãƒ¼ã‚±ãƒ³ã‚¹æœ‰åŠ¹åŒ–
+		"""
+		INVALID_HANDLE_VALUE = -1
+		STD_INPUT_HANDLE  = -10
+		STD_OUTPUT_HANDLE = -11
+		STD_ERROR_HANDLE  = -12
+		ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004
+		ENABLE_LVB_GRID_WORLDWIDE = 0x0010
 
-	hOut = windll.kernel32.GetStdHandle(STD_OUTPUT_HANDLE)
-	if hOut == INVALID_HANDLE_VALUE:
-		return False
-	dwMode = wintypes.DWORD()
-	if windll.kernel32.GetConsoleMode(hOut, byref(dwMode)) == 0:
-		return False
-	dwMode.value |= ENABLE_VIRTUAL_TERMINAL_PROCESSING
-	if windll.kernel32.SetConsoleMode(hOut, dwMode) == 0:
-		return False
-	return True
+		hOut = windll.kernel32.GetStdHandle(STD_OUTPUT_HANDLE)
+		if hOut == INVALID_HANDLE_VALUE:
+			return False
+		dwMode = wintypes.DWORD()
+		if windll.kernel32.GetConsoleMode(hOut, byref(dwMode)) == 0:
+			return False
+		dwMode.value |= ENABLE_VIRTUAL_TERMINAL_PROCESSING
+		if windll.kernel32.SetConsoleMode(hOut, dwMode) == 0:
+			return False
+		return True
+elif os.name == "posix":
+	def getch():
+		return sys.stdin.read(1)
 
 
-def set_ext_pattern(file):
+	class Termios():
+		def __init__(self):
+			# save the terminal settings
+			self.fd = sys.stdin.fileno()
+			self.old_term = termios.tcgetattr(self.fd)
+
+			# new terminal setting unbuffered
+			self.new_term = termios.tcgetattr(self.fd)
+			self.new_term[3] &= (~termios.ICANON & ~termios.ECHO)
+
+		def set_normal_term(self):
+			# switch to normal terminal
+			termios.tcsetattr(self.fd, termios.TCSAFLUSH, self.old_term)
+
+		def set_curses_term(self):
+			# switch to unbuffered terminal
+			termios.tcsetattr(self.fd, termios.TCSAFLUSH, self.new_term)
+
+
+def set_ext_pattern(file="", ext=""):
 	"""
-	Šg’£q‚É‰‚¶‚½‹­’²ƒpƒ^[ƒ“‚Ìİ’è
+	æ‹¡å¼µå­ã«å¿œã˜ãŸå¼·èª¿ãƒ‘ã‚¿ãƒ¼ãƒ³ã®è¨­å®š
 	"""
 	global syntax_list
 	global multi_line_ptn
 	global comment_ptn
 	global quote_ptn
 
-	ext = os.path.splitext(file)[-1]
+	if file:
+		ext = os.path.splitext(file)[-1]
 
-	# syntaxƒŠƒXƒg‚Ìİ’è
+	# syntaxãƒªã‚¹ãƒˆã®è¨­å®š
 	if ext in syntax_dic:
 		syntax_list = syntax_dic[ext]
 	else:
 		syntax_list = ()
 
-	# •¡”s‚Ì‹­’²ƒpƒ^[ƒ“‚Ìİ’è
+	# è¤‡æ•°è¡Œã®å¼·èª¿ãƒ‘ã‚¿ãƒ¼ãƒ³ã®è¨­å®š
 	if ext in multi_line_dic:
 		multi_line_ptn = multi_line_dic[ext]
 	else:
 		multi_line_ptn = ["", "", ""]
 
-	# ƒRƒƒ“ƒg‹­’²ƒpƒ^[ƒ“‚Ìİ’è
+	# ã‚³ãƒ¡ãƒ³ãƒˆå¼·èª¿ãƒ‘ã‚¿ãƒ¼ãƒ³ã®è¨­å®š
 	if ext in comment_dic:
 		comment_ptn = comment_dic[ext]
 	else:
 		comment_ptn = ""
 
-	# ƒNƒH[ƒe[ƒVƒ‡ƒ“‹­’²ƒpƒ^[ƒ“‚Ìİ’è
+	# ã‚¯ã‚©ãƒ¼ãƒ†ãƒ¼ã‚·ãƒ§ãƒ³å¼·èª¿ãƒ‘ã‚¿ãƒ¼ãƒ³ã®è¨­å®š
 	if ext in comment_dic:
 		quote_ptn = quote_dic[ext]
 	else:
 		quote_ptn = ""
 
-# debug—pCtrlƒf[ƒ^‚Ì•\¦İ’è
+
+# debugç”¨Ctrlãƒ‡ãƒ¼ã‚¿ã®è¡¨ç¤ºè¨­å®š
 def set_ctrl_info():
 	debug_print.append(f"read_files={display.read_files}")
 	for i, ctrl in enumerate(display.file_ctrl):
@@ -2185,35 +2296,44 @@ def set_ctrl_info():
 
 
 #=== main ======================================================================
-# Debug—p
+# Debugç”¨
 debug_print = []
 
-# ESCƒV[ƒPƒ“ƒX—LŒø‰»
-enable()
-
-# ˆø”‚Ì‰ğÍ
+# å¼•æ•°ã®è§£æ
 param = ParamInfo()
 stat = param.analyze(sys.argv)
-if stat == False:
+if stat is False:
 	print(f"{param.err_msg}")
 	sys.exit(0)
 
+stdin_flag = False
 if len(param.read_files) == 0:
-	print(f"{usage}")
-	sys.exit(0)
+	if sys.stdin.isatty():
+		print(f"{usage}")
+		sys.exit(0)
+	else:
+		stdin_flag = True
+		param.read_files.append("stdin")
 
-# ƒOƒ[ƒoƒ‹•Ï”‚Ì’è‹`
+# ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°ã®å®šç¾©
 history = HistoryCtrl()
-display = DispCtrl()
 keyctrl = KeyCtrl()
-display.tab_stop = param.tab_stop
 taginfo = TagInfo()
+display = DispCtrl(history, keyctrl, taginfo)
+display.tab_stop = param.tab_stop
 
-# ƒL[ƒ}ƒbƒv‚Ìİ’è
+if os.name == 'nt':
+	# ESCã‚·ãƒ¼ã‚±ãƒ³ã‚¹æœ‰åŠ¹åŒ–
+	enable()
+elif os.name == "posix":
+	tios = Termios()
+	tios.set_curses_term()
+
+# ã‚­ãƒ¼ãƒãƒƒãƒ—ã®è¨­å®š
 keyctrl.read_env()
 
 if param.make_tag_file != "":
-	# ƒ^ƒOƒtƒ@ƒCƒ‹‚Ìì¬
+	# ã‚¿ã‚°ãƒ•ã‚¡ã‚¤ãƒ«ã®ä½œæˆ
 	display.set_read_file(param.read_files)
 	for i in range(0, display.read_count):
 		display.read_index = i + 1
@@ -2223,32 +2343,38 @@ if param.make_tag_file != "":
 		for list in taginfo.tag_table:
 			f.write(f"{list[0]}\t{list[1]}\t/^{list[2]}$/\n")
 else:
-	# ƒ^ƒOî•ñƒe[ƒuƒ‹‚Ìì¬
+	# ã‚¿ã‚°æƒ…å ±ãƒ†ãƒ¼ãƒ–ãƒ«ã®ä½œæˆ
 	taginfo.read_file(param.read_tag_file)
 
-	# ƒL[“ü—Í§Œä
+	# ã‚¿ã‚°æƒ…å ±.è¡Œæ¤œç´¢æ–‡å­—ã«è¡Œç•ªå·ã‚’ä»˜ä¸
+	taginfo.set_add_num()
+
+	# ã‚­ãƒ¼å…¥åŠ›åˆ¶å¾¡
 	display.set_read_file(param.read_files)
-	file_ctrl = display.get_file_ctrl()
+	file_ctrl = display.get_file_ctrl(stdin_flag)
 	file_ctrl.disp_line()
-	number = 0 # “ü—Í’†‚Ì”’l
+	number = 0 # å…¥åŠ›ä¸­ã®æ•°å€¤
 
 	help_flag = False
 	end_flag = False
-	while end_flag == False:
+	while end_flag is False:
 		num_flag = False
 		loop_cnt = 1 if number == 0 else number
 		msg = ""
 
-		#key = ord(getch())
 		key = ord(keyctrl.getkey())
 		if key in (0x20, 0x66):	# Space, 'f'
-			msg = file_ctrl.vscroll(display.vscroll * loop_cnt, DIR_FORWARD)
+			lines = display.vscroll * loop_cnt
+			msg = file_ctrl.vscroll(lines, DIR_FORWARD)
 		elif key == 0x62:	# 'b'
-			msg = file_ctrl.vscroll(display.vscroll * loop_cnt, DIR_REVERSE)
+			lines = display.vscroll * loop_cnt
+			msg = file_ctrl.vscroll(lines, DIR_REVERSE)
 		elif key == 0x64:	# 'd'
-			msg = file_ctrl.vscroll(int(display.vscroll/2)*loop_cnt, DIR_FORWARD)
+			lines = int(display.vscroll / 2) * loop_cnt
+			msg = file_ctrl.vscroll(lines, DIR_FORWARD)
 		elif key == 0x75:	# 'u'
-			msg = file_ctrl.vscroll(int(display.vscroll/2)*loop_cnt, DIR_REVERSE)
+			lines = int(display.vscroll / 2) * loop_cnt
+			msg = file_ctrl.vscroll(lines, DIR_REVERSE)
 		elif key in (0x6a, 0x0d, 0x0a, 0x0e):	# 'j', CR, LF, ^N
 			msg = file_ctrl.vscroll(loop_cnt, DIR_FORWARD)
 		elif key in (0x6b, 0x10):	# 'k', ^P
@@ -2283,11 +2409,11 @@ else:
 				display.tab_stop = number
 			file_ctrl.disp_line()
 		elif key == 0x4e:	# 'N'
-			if help_flag == False:
+			if help_flag is False:
 				file_ctrl = display.next_file_ctrl(loop_cnt)
 				file_ctrl.disp_line()
 		elif key == 0x50:	# 'P'
-			if help_flag == False:
+			if help_flag is False:
 				file_ctrl = display.prev_file_ctrl(loop_cnt)
 				file_ctrl.disp_line()
 		elif key == 0x67:	# 'g'
@@ -2301,48 +2427,59 @@ else:
 		elif key == 0x40:	# '@'
 			msg = file_ctrl.set_mark("@")
 		elif key == 0x07:	# ^G
-			if help_flag == False:
+			if help_flag is False:
 				file_ctrl.disp_fname(full=True)
 				getch()
 				file_ctrl.disp_line()
 		elif key in (0x7b, 0x7d, 0x5b, 0x5d):	# {}[]
 			file_ctrl.srch_brace()
 		elif key in (0x69, 0x49):	# 'i', 'I'
-			if help_flag == False:
+			if help_flag is False:
 				select_f = True if key == 0x49 else False
 				msg = file_ctrl.tag_jump(select_f)
-				if re.search(r"^E:", msg) == None:
+				if re.search(r"^E:", msg) is None:
 					file_ctrl = display.tag_file[display.read_index - 1][-1]
 					file_ctrl.disp_line()
 				msg = re.sub(r"^.:", "", msg)
 		elif key == 0x6f:	# 'o'
-			if help_flag == False:
+			if help_flag is False:
 				if len(display.tag_file[display.read_index - 1]) > 0:
 					display.tag_file[display.read_index - 1].pop(-1)
 					file_ctrl = display.get_file_ctrl()
 					file_ctrl.disp_line()
 		elif key == 0x72:	# 'r'
 			msg = file_ctrl.add_tagfile()
+		elif key == 0x73:	# 's'
+			ext = file_ctrl.chng_syntax()
+			if ext != "":
+				set_ext_pattern(ext=ext)
+				file_ctrl.disp_line()
+			else:
+				msg = "Invalid key"
+		elif key == 0x61:	# 'a'
+			display.disp_message("reading.")
+			display.read_all_files(stdin_flag)
+			msg = "done."
 		elif key == 0x21:	# '!'
 			#display.clear_screen()
 			#for line in debug_print:
 			#	print(line)
 			#getch()
 			debug_print = []
-			file_ctrl.disp_line()
+			#file_ctrl.disp_line()
 		elif key == 0x08:	# ^H
 			if number > 0:
 				number = int(number / 10)
 				if number != 0:
 					num_flag = True
 			else:
-				if help_flag == False:
+				if help_flag is False:
 					help_flag = True
 					save_ctrl = file_ctrl
 					file_ctrl = display.set_help()
 					file_ctrl.disp_line()
 		elif key == 0x71:	# 'q'
-			if help_flag == True:
+			if help_flag is True:
 				help_flag = False
 				file_ctrl = save_ctrl
 				save_ctrl = None
@@ -2350,8 +2487,8 @@ else:
 			else:
 				end_flag = True
 		else:
-			if help_flag == False:
-				if key in range(0x30, 0x3a):	# ”šH
+			if help_flag is False:
+				if key in range(0x30, 0x3a):	# æ•°å­—ï¼Ÿ
 					number = 10 * number + (key - 0x30)
 					num_flag = True
 				else:
@@ -2362,7 +2499,7 @@ else:
 			display.move_print(1, display.term_lines, f":{number}")
 		else:
 			number = 0
-			if help_flag == True:
+			if help_flag is True:
 				msg = display.set_help_msg()
 
 			if msg != "":
@@ -2372,5 +2509,9 @@ else:
 
 			display.move_cursor(file_ctrl.cursor_x, file_ctrl.cursor_y)
 
-	# I—¹‚ÉƒJ[ƒ\ƒ‹‚ğ‰æ–ÊÅ‰ºs‚ÖˆÚ“®
+	# çµ‚äº†æ™‚ã«ã‚«ãƒ¼ã‚½ãƒ«ã‚’ç”»é¢æœ€ä¸‹è¡Œã¸ç§»å‹•
 	display.move_cursor(1, display.term_lines)
+	display.clear_eol()
+
+	if os.name == "posix":
+		tios.set_normal_term()
